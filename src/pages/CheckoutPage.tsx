@@ -39,98 +39,68 @@ export const CheckoutPage: React.FC = () => {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [submitting, setSubmitting] = useState(false);
 
-  /* =========================================================
-     PANIER VIDE
-     ========================================================= */
-  if (cart.length === 0) {
-    return (
-      <div className="py-20 text-center space-y-4 max-w-md mx-auto">
-        <ShoppingBag className="w-16 h-16 stroke-1 mx-auto text-slate-300" />
-
-        <h2 className="text-2xl font-black text-slate-900">
-          {t.cartEmpty}
-        </h2>
-
-        <p className="text-xs text-slate-500">
-          Veuillez ajouter des appareils à votre panier avant de procéder
-          au checkout.
-        </p>
-
-        <button
-          type="button"
-          onClick={() => setCurrentPage('catalog')}
-          className="bg-blue-600 text-white font-bold text-xs px-6 py-3 rounded-full hover:bg-blue-700 transition-colors"
-        >
-          {t.exploreCatalog}
-        </button>
-      </div>
-    );
-  }
-
-  /* =========================================================
-     VALIDATION TÉLÉPHONE MAROCAIN
-     ========================================================= */
-  const validateMoroccanPhone = (phone: string): boolean => {
-    const cleaned = phone.replace(/[\s\-().]/g, '');
-
-    /*
-      Formats acceptés :
-      0665657310
-      0765657310
-      0865657310
-      +212665657310
-      +212765657310
-      00212665657310
-    */
-    const pattern = /^(?:\+212|00212|0)[5678]\d{8}$/;
+  /*
+   * Validation du numéro marocain.
+   * Accepte notamment :
+   * 0665657310
+   * 06 65 65 73 10
+   * +212665657310
+   * +212 665657310
+   * 00212665657310
+   */
+  const validateMoroccanPhone = (phone: string) => {
+    const cleaned = phone.replace(/[\s\-.\(\)]/g, '');
+    const pattern = /^(?:\+212|00212|0)[567]\d{8}$/;
 
     return pattern.test(cleaned);
   };
 
-  /* =========================================================
-     VALIDATION ÉTAPE 1
-     ========================================================= */
-  const validateStep1 = (): boolean => {
+  /*
+   * Mise à jour centralisée des champs.
+   * Cette méthode évite les problèmes de réinitialisation
+   * de l'état pendant la saisie sur mobile.
+   */
+  const updateField = (
+    field: keyof OrderCustomer,
+    value: string
+  ) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+
+    setErrors((prev) => {
+      if (!prev[field]) {
+        return prev;
+      }
+
+      const next = { ...prev };
+      delete next[field];
+
+      return next;
+    });
+  };
+
+  const validateStep1 = () => {
     const errs: { [key: string]: string } = {};
 
-    const fullName = formData.fullName.trim();
-    const phone = formData.phone.trim();
-
-    if (!fullName) {
+    if (!formData.fullName.trim()) {
       errs.fullName =
         lang === 'ar'
           ? 'يرجى إدخال الاسم الكامل'
           : 'Le nom et prénom sont obligatoires.';
     }
 
-    if (!phone) {
+    if (!formData.phone.trim()) {
       errs.phone =
         lang === 'ar'
           ? 'يرجى إدخال رقم الهاتف'
           : 'Le numéro de téléphone est obligatoire.';
-    } else if (!validateMoroccanPhone(phone)) {
+    } else if (!validateMoroccanPhone(formData.phone)) {
       errs.phone =
         lang === 'ar'
           ? 'يرجى إدخال رقم هاتف مغربي صحيح (مثال: 0665657310)'
           : 'Numéro de téléphone marocain valide requis (ex: 06 65 65 73 10).';
-    }
-
-    /*
-      Email facultatif.
-      Il est seulement vérifié lorsqu'il est rempli.
-    */
-    if (formData.email?.trim()) {
-      const email = formData.email.trim();
-
-      const emailPattern =
-        /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-
-      if (!emailPattern.test(email)) {
-        errs.email =
-          lang === 'ar'
-            ? 'يرجى إدخال بريد إلكتروني صحيح'
-            : 'Veuillez saisir une adresse e-mail valide.';
-      }
     }
 
     setErrors(errs);
@@ -138,10 +108,7 @@ export const CheckoutPage: React.FC = () => {
     return Object.keys(errs).length === 0;
   };
 
-  /* =========================================================
-     VALIDATION ÉTAPE 2
-     ========================================================= */
-  const validateStep2 = (): boolean => {
+  const validateStep2 = () => {
     const errs: { [key: string]: string } = {};
 
     const cityTrimmed = formData.city.trim().toLowerCase();
@@ -168,36 +135,6 @@ export const CheckoutPage: React.FC = () => {
     return Object.keys(errs).length === 0;
   };
 
-  /* =========================================================
-     MODIFICATION SÉCURISÉE DES CHAMPS
-     ========================================================= */
-  const updateField = (
-    field: keyof OrderCustomer,
-    value: string
-  ) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-
-    /*
-      Supprime uniquement l'erreur du champ actuellement modifié.
-    */
-    setErrors((prev) => {
-      if (!prev[field]) {
-        return prev;
-      }
-
-      const next = { ...prev };
-      delete next[field];
-
-      return next;
-    });
-  };
-
-  /* =========================================================
-     ÉTAPE 1 → ÉTAPE 2
-     ========================================================= */
   const handleNextStep1 = (
     e: React.FormEvent<HTMLFormElement>
   ) => {
@@ -208,9 +145,6 @@ export const CheckoutPage: React.FC = () => {
     }
   };
 
-  /* =========================================================
-     ÉTAPE 2 → ÉTAPE 3
-     ========================================================= */
   const handleNextStep2 = (
     e: React.FormEvent<HTMLFormElement>
   ) => {
@@ -221,9 +155,6 @@ export const CheckoutPage: React.FC = () => {
     }
   };
 
-  /* =========================================================
-     VALIDATION FINALE
-     ========================================================= */
   const handleFinalSubmit = async () => {
     const step1Valid = validateStep1();
     const step2Valid = validateStep2();
@@ -250,20 +181,18 @@ export const CheckoutPage: React.FC = () => {
         address: formData.address.trim(),
         notes: formData.notes?.trim() || '',
       });
-    } catch (err: any) {
-      addToast(
-        err?.message ||
-          'Erreur lors de la validation de la commande',
-        'warning'
-      );
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : 'Erreur lors de la validation de la commande';
+
+      addToast(message, 'warning');
     } finally {
       setSubmitting(false);
     }
   };
 
-  /* =========================================================
-     FRAIS DE LIVRAISON
-     ========================================================= */
   const deliveryFeeDisplay = () => {
     if (deliveryConfig.type === 'free') {
       return (
@@ -298,14 +227,33 @@ export const CheckoutPage: React.FC = () => {
       ? cartTotal + deliveryConfig.fee
       : cartTotal;
 
-  /* =========================================================
-     AFFICHAGE
-     ========================================================= */
+  if (cart.length === 0) {
+    return (
+      <div className="py-20 text-center space-y-4 max-w-md mx-auto">
+        <ShoppingBag className="w-16 h-16 stroke-1 mx-auto text-slate-300" />
+
+        <h2 className="text-2xl font-black text-slate-900">
+          {t.cartEmpty}
+        </h2>
+
+        <p className="text-xs text-slate-500">
+          Veuillez ajouter des appareils à votre panier avant de procéder au checkout.
+        </p>
+
+        <button
+          type="button"
+          onClick={() => setCurrentPage('catalog')}
+          className="bg-blue-600 text-white font-bold text-xs px-6 py-3 rounded-full hover:bg-blue-700 transition-colors"
+        >
+          {t.exploreCatalog}
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-16">
-      {/* =====================================================
-          TITRE
-          ===================================================== */}
+      {/* Titre */}
       <div className="border-b border-slate-200 pb-4">
         <h1 className="text-2xl sm:text-3xl font-black text-slate-900">
           {t.checkoutTitle}
@@ -317,13 +265,11 @@ export const CheckoutPage: React.FC = () => {
         </p>
       </div>
 
-      {/* =====================================================
-          BARRE DE PROGRESSION
-          ===================================================== */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+      {/* Barre de progression */}
+      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
         <div className="flex items-center justify-between max-w-2xl mx-auto text-xs font-bold">
-
-          {/* ÉTAPE 1 */}
+          
+          {/* Étape 1 */}
           <button
             type="button"
             onClick={() => setCurrentStep(1)}
@@ -348,21 +294,19 @@ export const CheckoutPage: React.FC = () => {
             </span>
 
             <span className="hidden sm:inline">
-              {lang === 'ar'
-                ? '1. المشتري'
-                : '1. Client'}
+              {lang === 'ar' ? '1. المشتري' : '1. Client'}
             </span>
           </button>
 
           <div
-            className={`flex-1 h-1 mx-3 rounded-full ${
+            className={`flex-1 h-1 mx-3 rounded-full transition-colors ${
               currentStep > 1
                 ? 'bg-emerald-500'
                 : 'bg-slate-200'
             }`}
           />
 
-          {/* ÉTAPE 2 */}
+          {/* Étape 2 */}
           <button
             type="button"
             onClick={() => {
@@ -391,21 +335,19 @@ export const CheckoutPage: React.FC = () => {
             </span>
 
             <span className="hidden sm:inline">
-              {lang === 'ar'
-                ? '2. التوصيل'
-                : '2. Livraison'}
+              {lang === 'ar' ? '2. التوصيل' : '2. Livraison'}
             </span>
           </button>
 
           <div
-            className={`flex-1 h-1 mx-3 rounded-full ${
+            className={`flex-1 h-1 mx-3 rounded-full transition-colors ${
               currentStep > 2
                 ? 'bg-emerald-500'
                 : 'bg-slate-200'
             }`}
           />
 
-          {/* ÉTAPE 3 */}
+          {/* Étape 3 */}
           <button
             type="button"
             onClick={() => {
@@ -441,19 +383,13 @@ export const CheckoutPage: React.FC = () => {
         </div>
       </div>
 
-      {/* =====================================================
-          CONTENU PRINCIPAL
-          ===================================================== */}
       <div className="grid md:grid-cols-12 gap-8">
-
-        {/* ===================================================
-            FORMULAIRE
-            =================================================== */}
+        {/* Formulaire */}
         <div className="md:col-span-7 space-y-6">
 
-          {/* =================================================
-              ÉTAPE 1 : INFORMATIONS CLIENT
-              ================================================= */}
+          {/* =========================
+              ÉTAPE 1 : CLIENT
+          ========================== */}
           {currentStep === 1 && (
             <form
               onSubmit={handleNextStep1}
@@ -470,9 +406,7 @@ export const CheckoutPage: React.FC = () => {
                 </span>
               </h3>
 
-              {/* =============================================
-                  NOM COMPLET
-                  ============================================= */}
+              {/* NOM COMPLET */}
               <div>
                 <label
                   htmlFor="checkout-fullName"
@@ -492,15 +426,12 @@ export const CheckoutPage: React.FC = () => {
                   dir="auto"
                   value={formData.fullName}
                   onChange={(e) =>
-                    updateField(
-                      'fullName',
-                      e.currentTarget.value
-                    )
+                    updateField('fullName', e.target.value)
                   }
-                  placeholder="Ex: Mohamed Amine"
-                  className={`w-full bg-slate-50 text-slate-900 text-sm px-4 py-3.5 rounded-xl border focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${
+                  placeholder="Ex : Mohamed Amine"
+                  className={`w-full bg-slate-50 text-slate-900 text-base sm:text-xs px-4 py-3.5 rounded-xl border focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${
                     errors.fullName
-                      ? 'border-rose-500 bg-rose-50'
+                      ? 'border-rose-500 bg-rose-50/20'
                       : 'border-slate-200 focus:border-blue-600'
                   }`}
                 />
@@ -512,9 +443,7 @@ export const CheckoutPage: React.FC = () => {
                 )}
               </div>
 
-              {/* =============================================
-                  TÉLÉPHONE
-                  ============================================= */}
+              {/* TÉLÉPHONE */}
               <div>
                 <label
                   htmlFor="checkout-phone"
@@ -532,15 +461,12 @@ export const CheckoutPage: React.FC = () => {
                   dir="ltr"
                   value={formData.phone}
                   onChange={(e) =>
-                    updateField(
-                      'phone',
-                      e.currentTarget.value
-                    )
+                    updateField('phone', e.target.value)
                   }
                   placeholder="06 65 65 73 10"
-                  className={`w-full bg-slate-50 text-slate-900 text-sm px-4 py-3.5 rounded-xl border focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${
+                  className={`w-full bg-slate-50 text-slate-900 text-base sm:text-xs px-4 py-3.5 rounded-xl border focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${
                     errors.phone
-                      ? 'border-rose-500 bg-rose-50'
+                      ? 'border-rose-500 bg-rose-50/20'
                       : 'border-slate-200 focus:border-blue-600'
                   }`}
                 />
@@ -558,9 +484,7 @@ export const CheckoutPage: React.FC = () => {
                 )}
               </div>
 
-              {/* =============================================
-                  EMAIL
-                  ============================================= */}
+              {/* EMAIL */}
               <div>
                 <label
                   htmlFor="checkout-email"
@@ -581,29 +505,13 @@ export const CheckoutPage: React.FC = () => {
                   dir="ltr"
                   value={formData.email || ''}
                   onChange={(e) =>
-                    updateField(
-                      'email',
-                      e.currentTarget.value
-                    )
+                    updateField('email', e.target.value)
                   }
-                  placeholder="Ex: client@email.com"
-                  className={`w-full bg-slate-50 text-slate-900 text-sm px-4 py-3.5 rounded-xl border focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${
-                    errors.email
-                      ? 'border-rose-500 bg-rose-50'
-                      : 'border-slate-200 focus:border-blue-600'
-                  }`}
+                  placeholder="Ex : client@email.com"
+                  className="w-full bg-slate-50 text-slate-900 text-base sm:text-xs px-4 py-3.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
                 />
-
-                {errors.email && (
-                  <span className="text-[11px] text-rose-600 font-semibold mt-1 block">
-                    {errors.email}
-                  </span>
-                )}
               </div>
 
-              {/* =============================================
-                  BOUTON
-                  ============================================= */}
               <button
                 type="submit"
                 className="w-full bg-slate-900 hover:bg-blue-600 text-white font-black py-4 px-6 rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 text-xs active:scale-95 mt-4"
@@ -619,9 +527,9 @@ export const CheckoutPage: React.FC = () => {
             </form>
           )}
 
-          {/* =================================================
-              ÉTAPE 2 : ADRESSE
-              ================================================= */}
+          {/* =========================
+              ÉTAPE 2 : LIVRAISON
+          ========================== */}
           {currentStep === 2 && (
             <form
               onSubmit={handleNextStep2}
@@ -638,9 +546,7 @@ export const CheckoutPage: React.FC = () => {
                 </span>
               </h3>
 
-              {/* =============================================
-                  VILLE
-                  ============================================= */}
+              {/* VILLE */}
               <div>
                 <label
                   htmlFor="checkout-city"
@@ -653,17 +559,17 @@ export const CheckoutPage: React.FC = () => {
                   id="checkout-city"
                   name="city"
                   type="text"
-                  value="Taourirt"
+                  autoComplete="address-level2"
+                  value={formData.city}
                   readOnly
-                  aria-readonly="true"
-                  className={`w-full bg-emerald-50 text-emerald-950 font-bold text-sm px-4 py-3 rounded-xl border ${
+                  className={`w-full bg-emerald-50 text-emerald-950 font-bold text-xs px-4 py-3 rounded-xl border ${
                     errors.city
                       ? 'border-rose-500 bg-rose-50'
                       : 'border-emerald-200'
                   }`}
                 />
 
-                <span className="text-[11px] text-emerald-700 font-medium mt-1 flex items-center gap-1">
+                <span className="text-[11px] text-emerald-700 font-medium mt-1 block flex items-center gap-1">
                   <CheckCircle2 className="w-3.5 h-3.5" />
 
                   {lang === 'ar'
@@ -678,9 +584,7 @@ export const CheckoutPage: React.FC = () => {
                 )}
               </div>
 
-              {/* =============================================
-                  ADRESSE
-                  ============================================= */}
+              {/* ADRESSE */}
               <div>
                 <label
                   htmlFor="checkout-address"
@@ -697,15 +601,12 @@ export const CheckoutPage: React.FC = () => {
                   dir="auto"
                   value={formData.address}
                   onChange={(e) =>
-                    updateField(
-                      'address',
-                      e.currentTarget.value
-                    )
+                    updateField('address', e.target.value)
                   }
-                  placeholder="Ex: Quartier Hay Jdid, Rue 12, N° 45, Taourirt"
-                  className={`w-full bg-slate-50 text-slate-900 text-sm p-4 rounded-xl border focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${
+                  placeholder="Ex : Quartier Hay Jdid, Rue 12, N° 45, Taourirt"
+                  className={`w-full bg-slate-50 text-slate-900 text-base sm:text-xs p-4 rounded-xl border focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${
                     errors.address
-                      ? 'border-rose-500 bg-rose-50'
+                      ? 'border-rose-500 bg-rose-50/20'
                       : 'border-slate-200 focus:border-blue-600'
                   }`}
                 />
@@ -717,9 +618,7 @@ export const CheckoutPage: React.FC = () => {
                 )}
               </div>
 
-              {/* =============================================
-                  NOTES
-                  ============================================= */}
+              {/* NOTES */}
               <div>
                 <label
                   htmlFor="checkout-notes"
@@ -736,19 +635,13 @@ export const CheckoutPage: React.FC = () => {
                   dir="auto"
                   value={formData.notes || ''}
                   onChange={(e) =>
-                    updateField(
-                      'notes',
-                      e.currentTarget.value
-                    )
+                    updateField('notes', e.target.value)
                   }
-                  placeholder="Ex: Merci d'appeler avant la livraison"
-                  className="w-full bg-slate-50 text-slate-900 text-sm px-4 py-3.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
+                  placeholder="Ex : Merci d'appeler avant la livraison"
+                  className="w-full bg-slate-50 text-slate-900 text-base sm:text-xs px-4 py-3.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
                 />
               </div>
 
-              {/* =============================================
-                  NAVIGATION
-                  ============================================= */}
               <div className="flex gap-3 pt-2">
                 <button
                   type="button"
@@ -780,12 +673,11 @@ export const CheckoutPage: React.FC = () => {
             </form>
           )}
 
-          {/* =================================================
+          {/* =========================
               ÉTAPE 3 : CONFIRMATION
-              ================================================= */}
+          ========================== */}
           {currentStep === 3 && (
             <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-6">
-
               <h3 className="text-base font-black text-slate-900 border-b border-slate-100 pb-3 flex items-center gap-2">
                 <FileText className="w-5 h-5 text-blue-600" />
 
@@ -796,7 +688,7 @@ export const CheckoutPage: React.FC = () => {
                 </span>
               </h3>
 
-              {/* RÉCAPITULATIF CLIENT */}
+              {/* RÉCAPITULATIF */}
               <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs space-y-2">
                 <div className="flex justify-between items-center border-b border-slate-200 pb-2">
                   <span className="font-bold text-slate-900">
@@ -844,12 +736,10 @@ export const CheckoutPage: React.FC = () => {
                 </p>
 
                 <p className="text-emerald-800 text-[11px]">
-                  Le règlement s'effectue auprès de notre livreur à la
-                  réception de vos appareils à Taourirt.
+                  Le règlement s'effectue auprès de notre livreur à la réception de vos appareils à Taourirt.
                 </p>
               </div>
 
-              {/* NAVIGATION FINALE */}
               <div className="flex gap-3 pt-2">
                 <button
                   type="button"
@@ -872,18 +762,12 @@ export const CheckoutPage: React.FC = () => {
                   className="w-2/3 bg-blue-600 hover:bg-blue-700 text-white font-black py-4 px-6 rounded-2xl shadow-xl transition-all flex items-center justify-center gap-2 text-xs active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {submitting ? (
-                    <span>
-                      {lang === 'ar'
-                        ? 'جار التسجيل...'
-                        : 'Enregistrement...'}
-                    </span>
+                    <span>Enregistrement...</span>
                   ) : (
                     <>
                       <CheckCircle2 className="w-4 h-4" />
 
-                      <span>
-                        {t.confirmOrderCTA}
-                      </span>
+                      <span>{t.confirmOrderCTA}</span>
                     </>
                   )}
                 </button>
@@ -892,18 +776,18 @@ export const CheckoutPage: React.FC = () => {
           )}
         </div>
 
-        {/* ===================================================
-            RÉSUMÉ DE COMMANDE
-            =================================================== */}
+        {/* =========================
+            RÉSUMÉ COMMANDE
+        ========================== */}
         <div className="md:col-span-5 space-y-4">
           <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
-
             <h3 className="text-sm font-bold text-slate-900 border-b border-slate-100 pb-3">
-              {t.orderSummary} ({cart.length}{' '}
-              {cart.length > 1 ? 'articles' : 'article'})
+              {t.orderSummary} (
+              {cart.length} article
+              {cart.length > 1 ? 's' : ''}
+              )
             </h3>
 
-            {/* PRODUITS */}
             <div className="divide-y divide-slate-100 max-h-80 overflow-y-auto space-y-2 pr-1">
               {cart.map((item) => (
                 <div
@@ -934,7 +818,7 @@ export const CheckoutPage: React.FC = () => {
                     </p>
                   </div>
 
-                  <span className="text-xs font-black text-slate-900 whitespace-nowrap">
+                  <span className="text-xs font-black text-slate-900">
                     {(
                       item.product.price *
                       item.quantity
@@ -945,9 +829,8 @@ export const CheckoutPage: React.FC = () => {
               ))}
             </div>
 
-            {/* TOTAUX */}
+            {/* TOTAL */}
             <div className="pt-4 border-t border-slate-200 space-y-2 text-xs">
-
               <div className="flex justify-between text-slate-600">
                 <span>{t.subtotal}</span>
 
