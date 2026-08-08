@@ -1,0 +1,268 @@
+import { Language } from '../types';
+
+export const TRANSLATIONS = {
+  fr: {
+    // Header & Meta
+    storeTitle: 'ELECTRO_FENNASSA - Électroménager à Taourirt',
+    storeSubtitle: 'Magasin d électroménager à BD LA RÉSISTANCE HAY JDID, Taourirt',
+    localDeliveryNotice: 'Livraison à domicile disponible uniquement à Taourirt',
+    openHours: 'Ouvert aujourd hui 09:00 - 21:00',
+    callUs: 'Appeler',
+    whatsappFast: 'WhatsApp',
+
+    // Menu Navigation
+    home: 'Accueil',
+    catalog: 'Catalogue',
+    grosElectromenager: 'Gros Électroménager',
+    petitElectromenager: 'Petit Électroménager',
+    promotions: 'Promotions',
+    packs: 'Packs',
+    marques: 'Marques',
+    about: 'À propos',
+    contact: 'Contact',
+    admin: 'Espace Admin',
+
+    // Footer Links
+    information: 'Informations',
+    legal: 'Mentions Légales',
+    deliveryInfo: 'Livraison à Taourirt',
+    warrantyInfo: 'Garantie & SAV',
+    terms: 'Conditions Générales',
+    privacy: 'Politique de Confidentialité',
+    returns: 'Politique de Retour',
+    copyright: 'Tous droits réservés.',
+
+    // Search & Filters
+    searchPlaceholder: 'Rechercher un réfrigérateur, lave-linge, robot...',
+    allCategories: 'Toutes les catégories',
+    filterByBrand: 'Filtrer par marque',
+    filterByPrice: 'Prix (DH)',
+    allBrands: 'Toutes les marques',
+    minPrice: 'Min DH',
+    maxPrice: 'Max DH',
+    sortBy: 'Trier par',
+    sortNewest: 'Nouveautés',
+    sortPriceAsc: 'Prix : Croissant',
+    sortPriceDesc: 'Prix : Décroissant',
+    resetFilters: 'Réinitialiser les filtres',
+    resultsCount: 'produit(s) trouvé(s)',
+
+    // Product Card & Actions
+    promoBadge: 'PROMO',
+    packBadge: 'PACK',
+    ref: 'Réf',
+    addToCart: 'Ajouter au panier',
+    orderOnWhatsApp: 'Commander sur WhatsApp',
+    viewProduct: 'Voir la fiche',
+    viewPack: 'Découvrir le pack',
+    warranty: 'Garantie',
+    color: 'Couleur',
+    power: 'Puissance',
+    dimensions: 'Dimensions',
+
+    // Product Detail Page
+    technicalSpecs: 'Caractéristiques techniques',
+    description: 'Description du produit',
+    guaranteeNotice: 'Produit garanti d origine avec service après-vente local à Taourirt.',
+    fastLocalDelivery: 'Livraison rapide à votre adresse à Taourirt avec vérification sur place avant paiement.',
+    cashOnDelivery: 'Paiement en espèces à la livraison',
+    relatedProducts: 'Produits similaires',
+
+    // Cart & Checkout
+    cartTitle: 'Votre Panier',
+    cartEmpty: 'Votre panier est vide',
+    subtotal: 'Sous-total',
+    deliveryCost: 'Frais de livraison',
+    freeTaourirtDelivery: 'Gratuite à Taourirt',
+    total: 'Total',
+    proceedToCheckout: 'Passer la commande',
+    continueShopping: 'Continuer mes achats',
+    remove: 'Supprimer',
+    quantity: 'Quantité',
+
+    // Checkout Form
+    checkoutTitle: 'Validation de votre commande',
+    checkoutSubtitle: 'Livraison uniquement sur Taourirt. Paiement en espèces à la livraison.',
+    fullName: 'Nom et Prénom',
+    phone: 'Numéro de téléphone (Maroc)',
+    cityLabel: 'Ville de livraison',
+    cityValue: 'Taourirt (Uniquement)',
+    address: 'Adresse exacte à Taourirt (Quartier, Rue, N°)',
+    emailOptional: 'Adresse E-mail (Facultatif)',
+    notesOptional: 'Commentaire ou instructions particulières (Facultatif)',
+    confirmOrderCTA: 'Confirmer la commande (Paiement à la livraison)',
+    cashOnDeliveryAlert: 'Le règlement s effectue en espèces auprès du livreur lors de la réception de vos appareils.',
+
+    // Order Confirmation
+    orderConfirmedTitle: 'Commande enregistrée avec succès !',
+    orderNumber: 'Numéro de commande',
+    thankYouMessage: 'Merci pour votre confiance en ELECTRO_FENNASSA. Votre commande a bien été enregistrée.',
+    whatsAppConfirmInstruction: 'Afin d accélérer la préparation de votre livraison à Taourirt, veuillez cliquer sur le bouton ci-dessous pour nous envoyer votre confirmation par WhatsApp.',
+    confirmViaWhatsAppCTA: 'Envoyer ma confirmation par WhatsApp',
+    orderSummary: 'Récapitulatif de votre commande',
+    backToHome: 'Retour à l accueil',
+
+    // Contact Page
+    contactTitle: 'Contactez ELECTRO_FENNASSA',
+    contactSubtitle: 'Notre équipe à Taourirt est à votre disposition pour vous conseiller et répondre à toutes vos questions.',
+    storeAddressLabel: 'Adresse du magasin',
+    phoneLabel: 'Téléphone',
+    whatsappLabel: 'WhatsApp Direct',
+    emailLabel: 'Adresse E-mail',
+    hoursLabel: 'Horaires d ouverture',
+    googleMapsCTA: 'Ouvrir sur Google Maps',
+    sendUsMessage: 'Envoyez-nous un message',
+    sendMessageCTA: 'Envoyer le message',
+
+    // Home Page Hero & Highlights
+    heroTitle: 'L Électroménager de Qualité à Taourirt',
+    heroSubtitle: 'Grandes marques internationales, promotions exclusives, packs avantageux et livraison à domicile sur toute la ville de Taourirt.',
+    exploreCatalog: 'Découvrir le catalogue',
+    viewPromotions: 'Voir les promotions',
+    viewPacks: 'Découvrir nos Packs',
+    popularCategories: 'Catégories Populaires',
+    promotionsSpotlight: 'Promotions en cours',
+    featuredPacksTitle: 'Nos Packs Spéciaux',
+    featuredPacksSub: 'Bénéficiez de réductions exceptionnelles en regroupant vos achats.',
+    whyChooseUsTitle: 'Pourquoi choisir ELECTRO_FENNASSA ?',
+
+    // Admin
+    adminTitle: 'Administration ELECTRO_FENNASSA',
+    adminSubtitle: 'Aperçu des produits et commandes clients enregistrées localement.',
+    addProduct: 'Ajouter un produit',
+    placedOrders: 'Commandes reçues',
+    noOrders: 'Aucune commande enregistrée pour le moment.',
+  },
+  ar: {
+    // Header & Meta
+    storeTitle: 'ELECTRO_FENNASSA - الأجهزة المنزلية بتاوريرت',
+    storeSubtitle: 'متجر الأجهزة المنزلية ب شارع المقاومة حي الجديد، تاوريرت',
+    localDeliveryNotice: 'التوصيل المنزلي متوفر فقط داخل مدينة تاوريرت',
+    openHours: 'مفتوح اليوم 09:00 - 21:00',
+    callUs: 'اتصال',
+    whatsappFast: 'واتساب',
+
+    // Menu Navigation
+    home: 'الرئيسية',
+    catalog: 'الكتالوج',
+    grosElectromenager: 'الأجهزة الكبيرة',
+    petitElectromenager: 'الأجهزة الصغيرة',
+    promotions: 'التخفيضات',
+    packs: 'الباقات (Packs)',
+    marques: 'العلامات التجارية',
+    about: 'من نحن',
+    contact: 'اتصل بنا',
+    admin: 'لوحة الإدارة',
+
+    // Footer Links
+    information: 'معلومات',
+    legal: 'الشروط القانونية',
+    deliveryInfo: 'التوصيل بتاوريرت',
+    warrantyInfo: 'الضمان والخدمة',
+    terms: 'الشروط العامة',
+    privacy: 'سياسة الخصوصية',
+    returns: 'سياسة الإرجاع',
+    copyright: 'جميع الحقوق محفوظة.',
+
+    // Search & Filters
+    searchPlaceholder: 'ابحث عن ثلاجة، غسالة، أفران، خلاط...',
+    allCategories: 'جميع الفئات',
+    filterByBrand: 'تصفية حسب الماركة',
+    filterByPrice: 'السعر (درهم)',
+    allBrands: 'جميع الماركات',
+    minPrice: 'أدنى سعر',
+    maxPrice: 'أقصى سعر',
+    sortBy: 'ترتيب حسب',
+    sortNewest: 'الأحدث',
+    sortPriceAsc: 'السعر: تصاعدي',
+    sortPriceDesc: 'السعر: تنازلي',
+    resetFilters: 'إعادة ضبط الفلاتر',
+    resultsCount: 'منتج(ات) موجودة',
+
+    // Product Card & Actions
+    promoBadge: 'تخفيض',
+    packBadge: 'باك',
+    ref: 'مرجع',
+    addToCart: 'إضافة إلى السلة',
+    orderOnWhatsApp: 'الطلب عبر واتساب',
+    viewProduct: 'عرض التفاصيل',
+    viewPack: 'اكتشف الباقة',
+    warranty: 'الضمان',
+    color: 'اللون',
+    power: 'القوة',
+    dimensions: 'الأبعاد',
+
+    // Product Detail Page
+    technicalSpecs: 'المواصفات التقنية',
+    description: 'وصف المنتج',
+    guaranteeNotice: 'منتج أصلي مضمون مع خدمة ما بعد البيع محلية بمدينة تاوريرت.',
+    fastLocalDelivery: 'توصيل سريع إلى عنوانك بتاوريرت مع المعاينة قبل الدفع.',
+    cashOnDelivery: 'الدفع نقداً عند الاستلام',
+    relatedProducts: 'منتجات مشابهة',
+
+    // Cart & Checkout
+    cartTitle: 'سلة التسوق',
+    cartEmpty: 'سلة التسوق فارغة',
+    subtotal: 'المجموع الفرعي',
+    deliveryCost: 'مصاريف التوصيل',
+    freeTaourirtDelivery: 'مجاني بتاوريرت',
+    total: 'المجموع الإجمالي',
+    proceedToCheckout: 'متابعة الطلب',
+    continueShopping: 'مواصلة التسوق',
+    remove: 'حذف',
+    quantity: 'الكمية',
+
+    // Checkout Form
+    checkoutTitle: 'تأكيد الطلب',
+    checkoutSubtitle: 'التوصيل حصرياً لمدينة تاوريرت. الدفع نقداً عند الاستلام.',
+    fullName: 'الاسم الكامل',
+    phone: 'رقم الهاتف (المغرب)',
+    cityLabel: 'مدينة التوصيل',
+    cityValue: 'تاوريرت (فقط)',
+    address: 'العنوان بالتفصيل بتاوريرت (الحي، الشارع، الرقم)',
+    emailOptional: 'البريد الإلكتروني (اختياري)',
+    notesOptional: 'ملاحظات أو تعليمات إضافية (اختياري)',
+    confirmOrderCTA: 'تأكيد الطلب (الدفع عند الاستلام)',
+    cashOnDeliveryAlert: 'يتم السداد نقداً لمندوب التوصيل عند استلام أجهزتكم والمعاينة.',
+
+    // Order Confirmation
+    orderConfirmedTitle: 'تم تسجيل طلبك بنجاح!',
+    orderNumber: 'رقم الطلب',
+    thankYouMessage: 'شكراً لثقتكم في ELECTRO_FENNASSA. تم تسلم طلبكم بنجاح.',
+    whatsAppConfirmInstruction: 'لتسريع تجهيز وإرسال طلبيتك بمدينة تاوريرت، يرجى الضغط على الزر أسفله لإرسال التأكيد مباشرة عبر واتساب.',
+    confirmViaWhatsAppCTA: 'إرسال التأكيد عبر واتساب',
+    orderSummary: 'ملخص الطلبية',
+    backToHome: 'العودة للرئيسية',
+
+    // Contact Page
+    contactTitle: 'تواصل مع ELECTRO_FENNASSA',
+    contactSubtitle: 'فريقنا في تاوريرت في خدمتكم للإجابة عن أسئلتكم ومساعدتكم في الاختيار.',
+    storeAddressLabel: 'عنوان المتجر',
+    phoneLabel: 'الهاتف',
+    whatsappLabel: 'واتساب مباشر',
+    emailLabel: 'البريد الإلكتروني',
+    hoursLabel: 'أوقات العمل',
+    googleMapsCTA: 'فتح على خرائط جوجل',
+    sendUsMessage: 'أرسل لنا رسالة',
+    sendMessageCTA: 'إرسال الرسالة',
+
+    // Home Page Hero & Highlights
+    heroTitle: 'الأجهزة المنزلية العالية الجودة بمدينة تاوريرت',
+    heroSubtitle: 'أشهر العلامات العالمية، تخفيضات حصرية، باقات ممتازة مع التوصيل المنزلي لجميع أحياء تاوريرت.',
+    exploreCatalog: 'تصفح الكتالوج',
+    viewPromotions: 'شاهد التخفيضات',
+    viewPacks: 'اكتشف الباقات',
+    popularCategories: 'الأقسام الأكثر طلباً',
+    promotionsSpotlight: 'العروض والتخفيضات الحالية',
+    featuredPacksTitle: 'باقاتنا الخاصة',
+    featuredPacksSub: 'استفد من تخفيضات استثنائية عند تجميع أجهزتك في باقة واحدة.',
+    whyChooseUsTitle: 'لماذا تختار ELECTRO_FENNASSA ؟',
+
+    // Admin
+    adminTitle: 'إدارة ELECTRO_FENNASSA',
+    adminSubtitle: 'معاينة المنتجات والطلبات المسجلة محلياً.',
+    addProduct: 'إضافة منتج',
+    placedOrders: 'الطلبات الواردة',
+    noOrders: 'لا توجد طلبات مسجلة حالياً.',
+  },
+};

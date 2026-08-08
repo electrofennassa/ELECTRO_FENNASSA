@@ -1,0 +1,6 @@
+{
+  "name": "ELECTRO_FENNASSA",
+  "description": "Boutique d'électroménager à Taourirt, Maroc - Gros et petit électroménager, promotions, packs et commande WhatsApp avec livraison à Taourirt.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
