@@ -26,20 +26,29 @@ export const supabaseDb = {
     const client = getSupabaseClient();
     if (!client) return [];
 
-    const { data, error } = await client.from('products').select('*').order('created_at', { ascending: false });
+    let { data, error } = await client.from('products').select('*').order('created_at', { ascending: false });
     if (error) {
-      console.error('Supabase getProducts error:', error);
-      throw error;
+      console.warn('Supabase getProducts ordered query warning:', error);
+      const res = await client.from('products').select('*');
+      data = res.data;
+      if (res.error) {
+        console.error('Supabase getProducts error:', res.error);
+        return [];
+      }
     }
 
     return (data || []).map((p) => {
-      const price = Number(p.price);
+      const price = Number(p.price || 0);
       const oldPrice = p.old_price ? Number(p.old_price) : undefined;
+      const specs = p.specifications && typeof p.specifications === 'object' && !Array.isArray(p.specifications)
+        ? Object.entries(p.specifications).map(([k, v]) => ({ label: { fr: String(k), ar: String(k) }, value: { fr: String(v), ar: String(v) } }))
+        : [];
+
       return {
         id: p.id,
-        reference: p.reference,
-        name: { fr: p.name_fr, ar: p.name_ar },
-        slug: p.slug,
+        reference: p.reference || '',
+        name: { fr: p.name_fr || '', ar: p.name_ar || '' },
+        slug: p.slug || '',
         description: { fr: p.description_fr || '', ar: p.description_ar || '' },
         price,
         oldPrice,
@@ -47,10 +56,10 @@ export const supabaseDb = {
         brand: p.brand_id || 'Électroménager',
         categoryId: p.category_id || 'gros-electromenager',
         category: p.category_id || 'gros-electromenager',
-        mainImage: p.main_image,
-        images: p.images || [p.main_image],
-        technicalSpecifications: p.specifications ? Object.entries(p.specifications).map(([k, v]) => ({ label: { fr: k, ar: k }, value: { fr: String(v), ar: String(v) } })) : [],
-        specifications: p.specifications ? Object.entries(p.specifications).map(([k, v]) => ({ label: { fr: k, ar: k }, value: { fr: String(v), ar: String(v) } })) : [],
+        mainImage: p.main_image || '',
+        images: Array.isArray(p.images) && p.images.length > 0 ? p.images : [p.main_image || ''],
+        technicalSpecifications: specs,
+        specifications: specs,
         warranty: `${p.warranty_months || 12} Mois`,
         color: { fr: 'Inox', ar: 'إينوكس' },
         featured: Boolean(p.is_featured),
@@ -200,16 +209,21 @@ export const supabaseDb = {
     const client = getSupabaseClient();
     if (!client) return [];
 
-    const { data, error } = await client.from('categories').select('*').order('created_at', { ascending: true });
+    let { data, error } = await client.from('categories').select('*').order('created_at', { ascending: true });
     if (error) {
-      console.error('Supabase getCategories error:', error);
-      return [];
+      console.warn('Supabase getCategories ordered query warning:', error);
+      const res = await client.from('categories').select('*');
+      data = res.data;
+      if (res.error) {
+        console.error('Supabase getCategories error:', res.error);
+        return [];
+      }
     }
 
     return (data || []).map((c) => ({
       id: c.id,
-      name: { fr: c.name_fr, ar: c.name_ar },
-      slug: c.slug,
+      name: { fr: c.name_fr || '', ar: c.name_ar || '' },
+      slug: c.slug || '',
       description: { fr: c.description_fr || '', ar: c.description_ar || '' },
       image: c.image || '',
       isActive: Boolean(c.is_active),
