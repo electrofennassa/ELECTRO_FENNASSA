@@ -270,18 +270,27 @@ export const CheckoutPage: React.FC = () => {
 
               {/* Full Name */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label htmlFor="checkout-fullName" className="block text-xs font-bold text-slate-700 mb-1">
                   {t.fullName} *
                 </label>
                 <input
+                  id="checkout-fullName"
+                  name="fullName"
                   type="text"
+                  autoComplete="name"
+                  dir="auto"
                   value={formData.fullName}
-                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setFormData((prev) => ({ ...prev, fullName: val }));
+                    if (errors.fullName) {
+                      setErrors((prev) => ({ ...prev, fullName: '' }));
+                    }
+                  }}
                   placeholder="Ex: Mohamed Amine"
-                  className={`w-full bg-slate-50 text-slate-900 text-xs px-4 py-3.5 rounded-xl border focus:outline-none ${
+                  className={`w-full bg-slate-50 text-slate-900 text-xs px-4 py-3.5 rounded-xl border focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${
                     errors.fullName ? 'border-rose-500 bg-rose-50/20' : 'border-slate-200 focus:border-blue-600'
                   }`}
-                  autoFocus
                 />
                 {errors.fullName && (
                   <span className="text-[11px] text-rose-600 font-semibold mt-1 block">
@@ -292,16 +301,25 @@ export const CheckoutPage: React.FC = () => {
 
               {/* Phone */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label htmlFor="checkout-phone" className="block text-xs font-bold text-slate-700 mb-1">
                   {t.phone} *
                 </label>
                 <input
+                  id="checkout-phone"
+                  name="phone"
                   type="tel"
+                  autoComplete="tel"
                   value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setFormData((prev) => ({ ...prev, phone: val }));
+                    if (errors.phone) {
+                      setErrors((prev) => ({ ...prev, phone: '' }));
+                    }
+                  }}
                   placeholder="06 65 65 73 10"
                   dir="ltr"
-                  className={`w-full bg-slate-50 text-slate-900 text-xs px-4 py-3.5 rounded-xl border focus:outline-none ${
+                  className={`w-full bg-slate-50 text-slate-900 text-xs px-4 py-3.5 rounded-xl border focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${
                     errors.phone ? 'border-rose-500 bg-rose-50/20' : 'border-slate-200 focus:border-blue-600'
                   }`}
                 />
@@ -317,15 +335,22 @@ export const CheckoutPage: React.FC = () => {
 
               {/* Optional Email */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label htmlFor="checkout-email" className="block text-xs font-bold text-slate-700 mb-1">
                   {t.emailOptional}
                 </label>
                 <input
+                  id="checkout-email"
+                  name="email"
                   type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  autoComplete="email"
+                  dir="ltr"
+                  value={formData.email || ''}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setFormData((prev) => ({ ...prev, email: val }));
+                  }}
                   placeholder="Ex: client@email.com"
-                  className="w-full bg-slate-50 text-slate-900 text-xs px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-600"
+                  className="w-full bg-slate-50 text-slate-900 text-xs px-4 py-3.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
                 />
               </div>
 
@@ -349,17 +374,18 @@ export const CheckoutPage: React.FC = () => {
 
               {/* City strictly Taourirt */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label htmlFor="checkout-city" className="block text-xs font-bold text-slate-700 mb-1">
                   {t.cityLabel}
                 </label>
                 <input
+                  id="checkout-city"
+                  name="city"
                   type="text"
                   value={formData.city}
-                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                  readOnly
                   className={`w-full bg-emerald-50 text-emerald-950 font-bold text-xs px-4 py-3 rounded-xl border ${
                     errors.city ? 'border-rose-500 bg-rose-50' : 'border-emerald-200'
                   }`}
-                  readOnly
                 />
                 <span className="text-[11px] text-emerald-700 font-medium mt-1 block flex items-center gap-1">
                   <CheckCircle2 className="w-3.5 h-3.5" />
@@ -376,18 +402,26 @@ export const CheckoutPage: React.FC = () => {
 
               {/* Full Address */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label htmlFor="checkout-address" className="block text-xs font-bold text-slate-700 mb-1">
                   {t.address} *
                 </label>
                 <textarea
+                  id="checkout-address"
+                  name="address"
                   rows={3}
+                  dir="auto"
                   value={formData.address}
-                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setFormData((prev) => ({ ...prev, address: val }));
+                    if (errors.address) {
+                      setErrors((prev) => ({ ...prev, address: '' }));
+                    }
+                  }}
                   placeholder="Ex: Quartier Hay Jdid, Rue 12, N° 45, Taourirt"
-                  className={`w-full bg-slate-50 text-slate-900 text-xs p-4 rounded-xl border focus:outline-none ${
+                  className={`w-full bg-slate-50 text-slate-900 text-xs p-4 rounded-xl border focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${
                     errors.address ? 'border-rose-500 bg-rose-50/20' : 'border-slate-200 focus:border-blue-600'
                   }`}
-                  autoFocus
                 />
                 {errors.address && (
                   <span className="text-[11px] text-rose-600 font-semibold mt-1 block">
@@ -398,15 +432,21 @@ export const CheckoutPage: React.FC = () => {
 
               {/* Notes optional */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label htmlFor="checkout-notes" className="block text-xs font-bold text-slate-700 mb-1">
                   {t.notesOptional}
                 </label>
                 <input
+                  id="checkout-notes"
+                  name="notes"
                   type="text"
-                  value={formData.notes}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  dir="auto"
+                  value={formData.notes || ''}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setFormData((prev) => ({ ...prev, notes: val }));
+                  }}
                   placeholder="Ex: Merci d appeler avant la livraison"
-                  className="w-full bg-slate-50 text-slate-900 text-xs px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-600"
+                  className="w-full bg-slate-50 text-slate-900 text-xs px-4 py-3.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
                 />
               </div>
 
