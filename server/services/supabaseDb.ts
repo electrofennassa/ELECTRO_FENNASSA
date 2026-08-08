@@ -300,20 +300,40 @@ export const supabaseDb = {
     const client = getSupabaseClient();
     if (!client) return [];
 
-    const { data, error } = await client.from('brands').select('*').order('created_at', { ascending: true });
+    let { data, error } = await client.from('brands').select('*').order('created_at', { ascending: true });
     if (error) {
-      console.error('Supabase getBrands error:', error);
-      return [];
+      console.warn('Supabase getBrands ordered query warning:', error);
+      const res = await client.from('brands').select('*');
+      data = res.data;
+      if (res.error) {
+        console.error('Supabase getBrands error:', res.error);
+        return [];
+      }
     }
 
-    return (data || []).map((b) => ({
-      id: b.id,
-      name: b.name,
-      slug: b.slug,
-      logo: b.logo || '',
-      description: { fr: b.description || '', ar: b.description || '' },
-      isActive: Boolean(b.is_active),
-    }));
+    return (data || []).map((b) => {
+      let desc = { fr: '', ar: '' };
+      if (b.description) {
+        if (typeof b.description === 'object') {
+          desc = { fr: b.description.fr || '', ar: b.description.ar || '' };
+        } else if (typeof b.description === 'string') {
+          try {
+            const parsed = JSON.parse(b.description);
+            desc = { fr: parsed.fr || '', ar: parsed.ar || '' };
+          } catch {
+            desc = { fr: b.description, ar: b.description };
+          }
+        }
+      }
+      return {
+        id: b.id,
+        name: b.name,
+        slug: b.slug,
+        logo: b.logo || '',
+        description: desc,
+        isActive: Boolean(b.is_active),
+      };
+    });
   },
 
   async createBrand(brand: Partial<Brand>): Promise<Brand> {
