@@ -1,5 +1,5 @@
-import { db } from './db.ts';
-import { supabaseDb } from './services/supabaseDb.ts';
+import { db } from './db.js';
+import { supabaseDb } from './services/supabaseDb.js';
 import {
   Product,
   Category,
@@ -10,7 +10,7 @@ import {
   Order,
   OrderStatus,
   DashboardStats,
-} from '../src/types.ts';
+} from '../src/types.js';
 
 /**
  * Unified Data Abstraction Layer
