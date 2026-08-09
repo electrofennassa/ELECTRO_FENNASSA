@@ -1,4 +1,4 @@
-import { Brand } from '../types';
+import { Brand } from '../types.js';
 
 export const INITIAL_BRANDS: Brand[] = [
   {

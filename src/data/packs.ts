@@ -1,5 +1,5 @@
-import { Pack } from '../types';
-import { INITIAL_PRODUCTS } from './products';
+import { Pack } from '../types.js';
+import { INITIAL_PRODUCTS } from './products.js';
 
 export const INITIAL_PACKS: Pack[] = [
   {

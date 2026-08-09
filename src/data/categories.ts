@@ -1,4 +1,4 @@
-import { Category, CategoryType, GrosSubCategory, PetitSubCategory } from '../types';
+import { Category, CategoryType, GrosSubCategory, PetitSubCategory } from '../types.js';
 
 export interface CategoryMeta {
   id: CategoryType;

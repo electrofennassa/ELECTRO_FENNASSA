@@ -1,4 +1,4 @@
-import { Promotion } from '../types';
+import { Promotion } from '../types.js';
 
 export const INITIAL_PROMOTIONS: Promotion[] = [
   {

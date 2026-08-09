@@ -1,4 +1,4 @@
-import { Product } from '../types';
+import { Product } from '../types.js';
 
 /**
  * DONNÉES DE DÉMONSTRATION - ELECTRO_FENNASSA TAOURIRT
