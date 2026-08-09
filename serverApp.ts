@@ -1,8 +1,8 @@
 import express, { Request, Response, NextFunction } from 'express';
 import path from 'path';
 import jwt from 'jsonwebtoken';
-import { dataManager } from './server/dataManager';
-import { OrderStatus } from './src/types';
+import { dataManager } from './server/dataManager.ts';
+import { OrderStatus } from './src/types.ts';
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;

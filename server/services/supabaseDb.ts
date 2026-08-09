@@ -1,4 +1,4 @@
-import { getSupabaseClient, isSupabaseConfigured } from './supabaseClient';
+import { getSupabaseClient, isSupabaseConfigured } from './supabaseClient.ts';
 import {
   Product,
   Category,
@@ -10,7 +10,7 @@ import {
   OrderItem,
   OrderStatus,
   DashboardStats,
-} from '../../src/types';
+} from '../../src/types.ts';
 
 // ==========================================
 // SUPABASE DATA SERVICE LAYER

@@ -15,13 +15,13 @@ import {
   User,
   DashboardStats,
   OrderStatus,
-} from '../src/types';
+} from '../src/types.ts';
 
-import { INITIAL_PRODUCTS } from '../src/data/products';
-import { INITIAL_CATEGORIES } from '../src/data/categories';
-import { INITIAL_BRANDS } from '../src/data/brands';
-import { INITIAL_PROMOTIONS } from '../src/data/promotions';
-import { INITIAL_PACKS } from '../src/data/packs';
+import { INITIAL_PRODUCTS } from '../src/data/products.ts';
+import { INITIAL_CATEGORIES } from '../src/data/categories.ts';
+import { INITIAL_BRANDS } from '../src/data/brands.ts';
+import { INITIAL_PROMOTIONS } from '../src/data/promotions.ts';
+import { INITIAL_PACKS } from '../src/data/packs.ts';
 
 export interface DatabaseSchema {
   users: User[];
