@@ -35,7 +35,7 @@ export interface DatabaseSchema {
   orderCounter: number;
 }
 
-const DB_PATH = path.join(process.cwd(), 'data', 'db.json');
+const DB_PATH = process.env.VERCEL ? path.join('/tmp', 'db.json') : path.join(process.cwd(), 'data', 'db.json');
 
 // Initial seed data for orders & customers
 const initialCustomers: CustomerRecord[] = [

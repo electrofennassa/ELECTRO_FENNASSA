@@ -1,7 +1,6 @@
 import express, { Request, Response, NextFunction } from 'express';
 import path from 'path';
 import jwt from 'jsonwebtoken';
-import { createServer as createViteServer } from 'vite';
 import { dataManager } from './server/dataManager';
 import { OrderStatus } from './src/types';
 
@@ -497,24 +496,28 @@ app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
 
 export default app;
 
-if (process.env.NODE_ENV !== 'production') {
-  createViteServer({
-    server: { middlewareMode: true },
-    appType: 'spa',
-  }).then((vite) => {
-    app.use(vite.middlewares);
-    app.listen(PORT, '0.0.0.0', () => {
-      console.log(`[ELECTRO_FENNASSA] Dev server running on http://0.0.0.0:${PORT}`);
+if (!process.env.VERCEL) {
+  if (process.env.NODE_ENV !== 'production') {
+    import('vite').then(({ createServer: createViteServer }) => {
+      createViteServer({
+        server: { middlewareMode: true },
+        appType: 'spa',
+      }).then((vite) => {
+        app.use(vite.middlewares);
+        app.listen(PORT, '0.0.0.0', () => {
+          console.log(`[ELECTRO_FENNASSA] Dev server running on http://0.0.0.0:${PORT}`);
+        });
+      });
     });
-  });
-} else if (!process.env.VERCEL) {
-  const distPath = path.join(process.cwd(), 'dist');
-  app.use(express.static(distPath));
-  app.get('*', (req: Request, res: Response) => {
-    res.sendFile(path.join(distPath, 'index.html'));
-  });
+  } else {
+    const distPath = path.join(process.cwd(), 'dist');
+    app.use(express.static(distPath));
+    app.get('*', (req: Request, res: Response) => {
+      res.sendFile(path.join(distPath, 'index.html'));
+    });
 
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`[ELECTRO_FENNASSA] Production server running on http://0.0.0.0:${PORT}`);
-  });
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`[ELECTRO_FENNASSA] Production server running on http://0.0.0.0:${PORT}`);
+    });
+  }
 }
