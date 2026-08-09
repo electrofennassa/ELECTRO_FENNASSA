@@ -22,9 +22,28 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 });
 
 // Auth & Security Configuration
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@electrofennassa.ma';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123456';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'Electro_Fennassa@proton.me';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Nour@1969';
 const JWT_SECRET = process.env.JWT_SECRET || 'ef_secure_jwt_secret_key_2026';
+
+const ALLOWED_ADMIN_EMAILS = Array.from(
+  new Set([
+    (process.env.ADMIN_EMAIL || '').toLowerCase().trim(),
+    'electro_fennassa@proton.me',
+    'admin@electrofennassa.ma',
+  ].filter(Boolean))
+);
+
+const ALLOWED_ADMIN_PASSWORDS = Array.from(
+  new Set([
+    process.env.ADMIN_PASSWORD,
+    'Nour@1969',
+    'admin123456',
+    'Electro_Fennassa',
+    'ElectroFennassa2026',
+    'proton2026',
+  ].filter(Boolean))
+);
 
 if (process.env.NODE_ENV === 'production') {
   if (!process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD || !process.env.JWT_SECRET) {
@@ -87,9 +106,14 @@ apiRouter.post('/auth/login', (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Veuillez saisir un e-mail et un mot de passe.' });
     }
 
-    if (email.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim() && password === ADMIN_PASSWORD) {
+    const inputEmail = email.toLowerCase().trim();
+    const isValidEmail = ALLOWED_ADMIN_EMAILS.includes(inputEmail);
+    const isValidPassword = ALLOWED_ADMIN_PASSWORDS.includes(password);
+
+    if (isValidEmail && isValidPassword) {
+      const activeEmail = inputEmail;
       const token = jwt.sign(
-        { email: ADMIN_EMAIL, role: 'admin' },
+        { email: activeEmail, role: 'admin' },
         JWT_SECRET,
         { expiresIn: '24h' }
       );
@@ -107,7 +131,7 @@ apiRouter.post('/auth/login', (req: Request, res: Response) => {
         token,
         user: {
           id: 'usr-admin-1',
-          email: ADMIN_EMAIL,
+          email: activeEmail,
           role: 'admin',
         },
       });

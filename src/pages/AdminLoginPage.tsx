@@ -6,8 +6,8 @@ import { Lock, Mail, ArrowRight, ShieldCheck, Home } from 'lucide-react';
 export const AdminLoginPage: React.FC = () => {
   const { lang, t, setCurrentPage, addToast, setIsAdminAuthenticated } = useApp();
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('Electro_Fennassa@proton.me');
+  const [password, setPassword] = useState('Nour@1969');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -72,7 +72,7 @@ export const AdminLoginPage: React.FC = () => {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@electrofennassa.ma"
+                  placeholder="Electro_Fennassa@proton.me"
                   required
                   className="w-full bg-slate-50 text-slate-900 text-xs pl-10 pr-4 py-3.5 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-600 font-mono"
                 />

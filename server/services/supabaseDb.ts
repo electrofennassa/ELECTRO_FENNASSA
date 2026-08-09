@@ -431,21 +431,26 @@ export const supabaseDb = {
     const client = getSupabaseClient();
     if (!client) return [];
 
-    const { data, error } = await client.from('promotions').select('*').order('created_at', { ascending: false });
+    let { data, error } = await client.from('promotions').select('*').order('created_at', { ascending: false });
     if (error) {
-      console.error('Supabase getPromotions error:', error);
-      return [];
+      console.warn('Supabase getPromotions ordered query warning:', error);
+      const res = await client.from('promotions').select('*');
+      data = res.data;
+      if (res.error) {
+        console.warn('Supabase getPromotions error:', res.error);
+        return [];
+      }
     }
 
     return (data || []).map((p) => ({
       id: p.id,
-      productId: 'prod-1',
-      title: { fr: p.title_fr, ar: p.title_ar },
-      oldPrice: 1000,
-      newPrice: 800,
-      discountPercentage: p.discount_percentage,
-      startDate: p.start_date,
-      endDate: p.end_date,
+      productId: p.product_id || 'prod-1',
+      title: { fr: p.title_fr || '', ar: p.title_ar || '' },
+      oldPrice: Number(p.old_price || 1000),
+      newPrice: Number(p.new_price || 800),
+      discountPercentage: p.discount_percentage || 0,
+      startDate: p.start_date || new Date().toISOString(),
+      endDate: p.end_date || new Date().toISOString(),
       isActive: Boolean(p.is_active),
     }));
   },
@@ -539,14 +544,22 @@ export const supabaseDb = {
     const client = getSupabaseClient();
     if (!client) return [];
 
-    const { data: packsData, error: packsErr } = await client
-      .from('packs')
-      .select('*')
-      .order('created_at', { ascending: false });
+    let packsData: any[] | null = null;
+    let packsErr: any = null;
+
+    const res1 = await client.from('packs').select('*').order('created_at', { ascending: false });
+    packsData = res1.data;
+    packsErr = res1.error;
 
     if (packsErr) {
-      console.error('Supabase getPacks error:', packsErr);
-      return [];
+      console.warn('Supabase getPacks ordered query warning:', packsErr);
+      const res2 = await client.from('packs').select('*');
+      packsData = res2.data;
+      packsErr = res2.error;
+      if (packsErr) {
+        console.warn('Supabase getPacks error:', packsErr);
+        return [];
+      }
     }
 
     const { data: packProdsData, error: ppErr } = await client
