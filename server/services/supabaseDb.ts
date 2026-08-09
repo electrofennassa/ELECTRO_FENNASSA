@@ -52,6 +52,7 @@ export const supabaseDb = {
         description: { fr: p.description_fr || '', ar: p.description_ar || '' },
         price,
         oldPrice,
+        stock: p.stock !== undefined ? Number(p.stock) : 10,
         brandId: p.brand_id || 'brand-generic',
         brand: p.brand_id || 'Électroménager',
         categoryId: p.category_id || 'gros-electromenager',
@@ -75,7 +76,7 @@ export const supabaseDb = {
     if (!client) throw new Error('Supabase Client non configuré.');
 
     const newId = product.id || `prod-${Date.now()}`;
-    const row = {
+    const row: any = {
       id: newId,
       reference: product.reference || `REF-${Date.now()}`,
       name_fr: product.name?.fr || 'Nouveau Produit',
@@ -112,6 +113,7 @@ export const supabaseDb = {
       description: { fr: data.description_fr || '', ar: data.description_ar || '' },
       price,
       oldPrice,
+      stock: Number(data.stock ?? 10),
       brandId: data.brand_id || 'brand-generic',
       brand: data.brand_id || 'Électroménager',
       categoryId: data.category_id || 'gros-electromenager',
@@ -172,6 +174,7 @@ export const supabaseDb = {
       description: { fr: data.description_fr || '', ar: data.description_ar || '' },
       price,
       oldPrice,
+      stock: Number(data.stock ?? 10),
       brandId: data.brand_id || 'brand-generic',
       brand: data.brand_id || 'Électroménager',
       categoryId: data.category_id || 'gros-electromenager',
@@ -888,44 +891,67 @@ export const supabaseDb = {
     items: Array<{
       productId: string;
       quantity: number;
+      productName?: string;
+      productReference?: string;
+      price?: number;
     }>;
   }): Promise<Order> {
     const client = getSupabaseClient();
     if (!client) throw new Error('Supabase client non configuré.');
 
     const productIds = params.items.map((i) => i.productId);
-    const { data: dbProducts, error: prodErr } = await client
-      .from('products')
-      .select('*')
-      .in('id', productIds);
 
-    if (prodErr || !dbProducts) {
-      throw new Error('Impossible de vérifier les prix des produits.');
-    }
+    const [{ data: dbProducts }, { data: dbPacks }] = await Promise.all([
+      client.from('products').select('*').in('id', productIds),
+      client.from('packs').select('*').in('id', productIds),
+    ]);
 
     const dbProductMap = new Map<string, any>();
-    dbProducts.forEach((p) => dbProductMap.set(p.id, p));
+    if (dbProducts) {
+      dbProducts.forEach((p) => dbProductMap.set(p.id, p));
+    }
+
+    const dbPackMap = new Map<string, any>();
+    if (dbPacks) {
+      dbPacks.forEach((p) => dbPackMap.set(p.id, p));
+    }
 
     const orderItemsToInsert: any[] = [];
     let subtotal = 0;
 
     for (const reqItem of params.items) {
       const prod = dbProductMap.get(reqItem.productId);
-      if (!prod) {
-        throw new Error(`Produit introuvable (ID: ${reqItem.productId})`);
+      const pack = dbPackMap.get(reqItem.productId);
+
+      let unitPrice = reqItem.price || 0;
+      let prodName = reqItem.productName || 'Produit';
+      let prodRef = reqItem.productReference || 'REF-GEN';
+      let validProductIdForFk: string | null = null;
+
+      if (prod) {
+        unitPrice = Number(prod.price) || unitPrice;
+        prodName = prod.name_fr || prodName;
+        prodRef = prod.reference || prodRef;
+        validProductIdForFk = prod.id;
+      } else if (pack) {
+        unitPrice = Number(pack.price) || unitPrice;
+        prodName = pack.name_fr || prodName;
+        prodRef = pack.slug || pack.id || prodRef;
+        validProductIdForFk = null; // foreign key in order_items points to products(id)
+      } else {
+        validProductIdForFk = null;
       }
 
-      const qty = Math.max(1, Math.floor(reqItem.quantity));
-      const unitPrice = Number(prod.price);
+      const qty = Math.max(1, Math.floor(reqItem.quantity || 1));
       const itemTotal = unitPrice * qty;
 
       subtotal += itemTotal;
 
       orderItemsToInsert.push({
         id: `item-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
-        product_id: prod.id,
-        product_name: prod.name_fr,
-        product_reference: prod.reference,
+        product_id: validProductIdForFk,
+        product_name: prodName,
+        product_reference: prodRef,
         quantity: qty,
         unit_price: unitPrice,
         total_price: itemTotal,
@@ -940,7 +966,8 @@ export const supabaseDb = {
       .from('customers')
       .select('*')
       .eq('phone', params.phone.trim())
-      .single();
+      .limit(1)
+      .maybeSingle();
 
     let customerId = existingCust?.id;
 
@@ -955,7 +982,10 @@ export const supabaseDb = {
         address: params.address.trim(),
         notes: params.notes?.trim() || null,
       };
-      await client.from('customers').insert([newCustRow]);
+      const { error: custErr } = await client.from('customers').insert([newCustRow]);
+      if (custErr) {
+        console.error('Supabase customer insertion error:', custErr);
+      }
     } else {
       await client
         .from('customers')
@@ -998,14 +1028,17 @@ export const supabaseDb = {
 
     if (orderInsErr) {
       console.error('Supabase order creation error:', orderInsErr);
-      throw orderInsErr;
+      throw new Error(orderInsErr.message || 'Erreur lors de la création de la commande');
     }
 
     orderItemsToInsert.forEach((item) => {
       item.order_id = createdOrder.id;
     });
 
-    await client.from('order_items').insert(orderItemsToInsert);
+    const { error: itemsInsErr } = await client.from('order_items').insert(orderItemsToInsert);
+    if (itemsInsErr) {
+      console.error('Supabase order items creation error:', itemsInsErr);
+    }
 
     const items: OrderItem[] = orderItemsToInsert.map((item) => ({
       id: item.id,

@@ -234,6 +234,12 @@ export const Footer: React.FC = () => {
                   {t.returns}
                 </button>
               </li>
+              <li className="pt-2 border-t border-slate-800">
+                <button onClick={() => handleNav('admin')} className="text-amber-400 hover:text-amber-300 font-bold transition-colors flex items-center gap-1">
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  <span>Espace Administration</span>
+                </button>
+              </li>
             </ul>
           </div>
 

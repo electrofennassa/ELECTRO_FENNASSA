@@ -65,6 +65,7 @@ export interface Product {
   specifications: SpecificationItem[];
   price: number; // in MAD (DH)
   oldPrice?: number;
+  stock?: number;
   discountPercentage?: number;
   warranty: string;
   dimensions?: string;

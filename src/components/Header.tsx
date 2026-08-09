@@ -23,6 +23,7 @@ import {
   Truck,
   Info,
   History,
+  ShieldCheck,
 } from 'lucide-react';
 
 export const Header: React.FC = () => {
@@ -162,6 +163,19 @@ export const Header: React.FC = () => {
                 العربية
               </button>
             </div>
+
+            {/* Admin Quick Button */}
+            <button
+              onClick={() => {
+                setCurrentPage('admin');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-slate-950 border border-amber-500/40 rounded-lg text-[11px] font-bold transition-all shadow-xs"
+              title="Accéder à l'Espace Administration"
+            >
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>Admin</span>
+            </button>
           </div>
         </div>
       </div>
@@ -532,6 +546,19 @@ export const Header: React.FC = () => {
                     )}
                   </button>
                 ))}
+
+                <button
+                  onClick={() => {
+                    setCurrentPage('admin');
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="w-full text-left px-4 py-3 rounded-xl text-sm font-bold text-slate-800 hover:bg-slate-50 border-t border-slate-100 mt-2 flex items-center justify-between"
+                >
+                  <span className="flex items-center gap-2">
+                    <ShieldCheck className="w-4 h-4 text-blue-600" />
+                    Espace Administration
+                  </span>
+                </button>
               </div>
             </div>
 

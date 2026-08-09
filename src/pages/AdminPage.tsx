@@ -39,6 +39,8 @@ import {
   DollarSign,
   Truck,
   ShieldCheck,
+  Warehouse,
+  Settings,
 } from 'lucide-react';
 
 export const AdminPage: React.FC = () => {
@@ -78,7 +80,7 @@ export const AdminPage: React.FC = () => {
 
   // Selected Admin Tab
   const [adminTab, setAdminTab] = useState<
-    'dashboard' | 'orders' | 'customers' | 'products' | 'categories' | 'brands' | 'promotions' | 'packs'
+    'dashboard' | 'orders' | 'customers' | 'products' | 'categories' | 'brands' | 'promotions' | 'packs' | 'stock' | 'settings'
   >('dashboard');
 
   // Load latest admin data on mount or tab change
@@ -212,6 +214,7 @@ export const AdminPage: React.FC = () => {
       description: { fr: '', ar: '' },
       price: 0,
       oldPrice: undefined,
+      stock: 10,
       warranty: '2 ans Garantie',
       dimensions: '',
       color: { fr: 'Inox', ar: 'إينوكس' },
@@ -450,6 +453,10 @@ export const AdminPage: React.FC = () => {
     }
   };
 
+  if (!isAdminAuthenticated) {
+    return <AdminLoginPage />;
+  }
+
   return (
     <div className="space-y-8 pb-20">
       {/* Top Banner Header with Logout */}
@@ -576,6 +583,30 @@ export const AdminPage: React.FC = () => {
         >
           <Boxes className="w-4 h-4 text-teal-400" />
           <span>Packs ({packs.length})</span>
+        </button>
+
+        <button
+          onClick={() => setAdminTab('stock')}
+          className={`px-4 py-2.5 rounded-xl font-extrabold text-xs flex items-center gap-2 transition-all shrink-0 ${
+            adminTab === 'stock'
+              ? 'bg-slate-900 text-white shadow-md'
+              : 'text-slate-700 hover:bg-slate-100'
+          }`}
+        >
+          <Warehouse className="w-4 h-4 text-emerald-400" />
+          <span>Stock ({products.reduce((acc, p) => acc + (p.stock ?? 10), 0)} u.)</span>
+        </button>
+
+        <button
+          onClick={() => setAdminTab('settings')}
+          className={`px-4 py-2.5 rounded-xl font-extrabold text-xs flex items-center gap-2 transition-all shrink-0 ${
+            adminTab === 'settings'
+              ? 'bg-slate-900 text-white shadow-md'
+              : 'text-slate-700 hover:bg-slate-100'
+          }`}
+        >
+          <Settings className="w-4 h-4 text-slate-400" />
+          <span>Paramètres</span>
         </button>
       </div>
 
@@ -1187,6 +1218,151 @@ export const AdminPage: React.FC = () => {
         </div>
       )}
 
+      {/* TAB 9: STOCK MANAGEMENT */}
+      {adminTab === 'stock' && (
+        <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+            <div>
+              <h2 className="text-lg font-black text-slate-900">Gestion des Stocks</h2>
+              <p className="text-xs text-slate-500">
+                Suivez et mettez à jour la quantité disponible en magasin pour chaque article.
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <span className="bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold px-3 py-1.5 rounded-xl flex items-center gap-1">
+                <CheckCircle2 className="w-3.5 h-3.5" /> En stock: {products.filter((p) => (p.stock ?? 10) > 5).length}
+              </span>
+              <span className="bg-amber-50 text-amber-800 border border-amber-200 text-xs font-bold px-3 py-1.5 rounded-xl flex items-center gap-1">
+                <AlertTriangle className="w-3.5 h-3.5" /> Stock faible: {products.filter((p) => (p.stock ?? 10) > 0 && (p.stock ?? 10) <= 5).length}
+              </span>
+              <span className="bg-rose-50 text-rose-800 border border-rose-200 text-xs font-bold px-3 py-1.5 rounded-xl flex items-center gap-1">
+                <X className="w-3.5 h-3.5" /> Rupture: {products.filter((p) => (p.stock ?? 10) === 0).length}
+              </span>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px]">
+                  <th className="py-3 px-2">Article</th>
+                  <th className="py-3 px-2">Référence</th>
+                  <th className="py-3 px-2">Marque</th>
+                  <th className="py-3 px-2">Prix (DH)</th>
+                  <th className="py-3 px-2 text-center">Quantité Stock</th>
+                  <th className="py-3 px-2 text-center">Statut</th>
+                  <th className="py-3 px-2 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {products.map((p) => {
+                  const currentStock = p.stock ?? 10;
+                  return (
+                    <tr key={p.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="py-3 px-2">
+                        <div className="flex items-center gap-3">
+                          <img src={p.mainImage} alt={p.name.fr} className="w-10 h-10 object-cover rounded-xl border" />
+                          <div>
+                            <span className="font-bold text-slate-900 block">{p.name.fr}</span>
+                            <span className="text-[10px] text-slate-400 block">{p.name.ar}</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-3 px-2 font-mono font-bold text-blue-600">{p.reference}</td>
+                      <td className="py-3 px-2 font-semibold text-slate-700">{p.brand}</td>
+                      <td className="py-3 px-2 font-black text-slate-900">{p.price.toLocaleString('fr-FR')} DH</td>
+                      <td className="py-3 px-2 text-center">
+                        <div className="inline-flex items-center gap-2 bg-slate-100 p-1 rounded-xl">
+                          <button
+                            onClick={() => updateProduct(p.id, { stock: Math.max(0, currentStock - 1) })}
+                            className="w-6 h-6 bg-white hover:bg-slate-200 font-bold rounded-lg text-slate-800 shadow-xs flex items-center justify-center text-sm"
+                            title="Diminuer stock"
+                          >
+                            -
+                          </button>
+                          <span className="font-extrabold text-slate-900 text-sm px-2">{currentStock}</span>
+                          <button
+                            onClick={() => updateProduct(p.id, { stock: currentStock + 1 })}
+                            className="w-6 h-6 bg-white hover:bg-slate-200 font-bold rounded-lg text-slate-800 shadow-xs flex items-center justify-center text-sm"
+                            title="Augmenter stock"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </td>
+                      <td className="py-3 px-2 text-center">
+                        {currentStock > 5 ? (
+                          <span className="bg-emerald-100 text-emerald-800 font-bold px-2.5 py-1 rounded-full text-[10px]">En Stock</span>
+                        ) : currentStock > 0 ? (
+                          <span className="bg-amber-100 text-amber-800 font-bold px-2.5 py-1 rounded-full text-[10px]">Stock Faible</span>
+                        ) : (
+                          <span className="bg-rose-100 text-rose-800 font-bold px-2.5 py-1 rounded-full text-[10px]">Rupture</span>
+                        )}
+                      </td>
+                      <td className="py-3 px-2 text-right">
+                        <button
+                          onClick={() => handleEditProduct(p)}
+                          className="bg-slate-900 hover:bg-blue-600 text-white font-bold text-[11px] px-3 py-1.5 rounded-xl transition-all"
+                        >
+                          Éditer Produit
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 10: PARAMÈTRES */}
+      {adminTab === 'settings' && (
+        <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-8">
+          <div>
+            <h2 className="text-xl font-black text-slate-900">Paramètres de l Administration</h2>
+            <p className="text-xs text-slate-500 mt-1">
+              Configuration du magasin ELECTRO_FENNASSA à Taourirt et état du système Supabase.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
+            {/* Store Information */}
+            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 space-y-4">
+              <h3 className="font-extrabold text-sm text-slate-900 flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-blue-600" /> Informations Boutique Taourirt
+              </h3>
+              <div className="space-y-2 text-slate-700">
+                <p><strong>Nom :</strong> ELECTRO_FENNASSA</p>
+                <p><strong>Ville :</strong> Taourirt, Maroc</p>
+                <p><strong>Adresse :</strong> Boulevard Hassan II, Taourirt</p>
+                <p><strong>Téléphone :</strong> +212 600 000 000</p>
+                <p><strong>WhatsApp :</strong> +212 600 000 000</p>
+                <p><strong>Zone de livraison :</strong> Taourirt et régions environnantes</p>
+              </div>
+            </div>
+
+            {/* Supabase Status */}
+            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 space-y-4">
+              <h3 className="font-extrabold text-sm text-slate-900 flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-emerald-600" /> Connexion Supabase Database
+              </h3>
+              <div className="space-y-2 text-slate-700">
+                <p className="flex items-center gap-2">
+                  <span>Base de Données:</span>
+                  <span className="bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded text-[10px]">
+                    Supabase PostgreSQL Connecté
+                  </span>
+                </p>
+                <p><strong>Synchronisation :</strong> En temps réel (Produits, Catégories, Marques, Orders)</p>
+                <p><strong>Persistance :</strong> Active après chaque modification</p>
+                <p><strong>Sécurité :</strong> Accès restreint à l administration par mot de passe</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ------------------------------------------------------------- */}
       {/* ORDER DETAIL MODAL */}
       {/* ------------------------------------------------------------- */}
@@ -1362,48 +1538,173 @@ export const AdminPage: React.FC = () => {
       {/* MODALS FOR PRODUCT / CATEGORY / BRAND / PROMO / PACK CREATION */}
       {isProductModalOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white w-full max-w-2xl rounded-3xl p-6 space-y-4 shadow-2xl my-8">
-            <div className="flex justify-between items-center border-b pb-2">
-              <h3 className="font-black text-slate-900 text-base">
+          <div className="bg-white w-full max-w-2xl rounded-3xl p-6 sm:p-8 space-y-5 shadow-2xl my-8">
+            <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+              <h3 className="font-black text-slate-900 text-lg">
                 {editingProductId ? 'Modifier le Produit' : 'Ajouter un Produit'}
               </h3>
-              <button onClick={() => setIsProductModalOpen(false)}><X className="w-5 h-5" /></button>
+              <button onClick={() => setIsProductModalOpen(false)} className="p-1 text-slate-400 hover:text-slate-800">
+                <X className="w-6 h-6" />
+              </button>
             </div>
-            <form onSubmit={handleSaveProduct} className="space-y-3 text-xs">
-              <div>
-                <label className="block font-bold mb-1">Nom (Français) *</label>
-                <input
-                  type="text"
-                  required
-                  value={productForm.name?.fr || ''}
-                  onChange={(e) => setProductForm({ ...productForm, name: { fr: e.target.value, ar: productForm.name?.ar || '' } })}
-                  className="w-full bg-slate-50 border p-2.5 rounded-xl"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
+            <form onSubmit={handleSaveProduct} className="space-y-4 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-bold mb-1">Prix (DH) *</label>
+                  <label className="block font-bold text-slate-700 mb-1">Nom (Français) *</label>
                   <input
-                    type="number"
+                    type="text"
                     required
-                    value={productForm.price || 0}
-                    onChange={(e) => setProductForm({ ...productForm, price: Number(e.target.value) })}
-                    className="w-full bg-slate-50 border p-2.5 rounded-xl"
+                    value={productForm.name?.fr || ''}
+                    onChange={(e) => setProductForm({ ...productForm, name: { fr: e.target.value, ar: productForm.name?.ar || '' } })}
+                    className="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-slate-900 focus:outline-none focus:border-blue-600"
                   />
                 </div>
                 <div>
-                  <label className="block font-bold mb-1">Référence *</label>
+                  <label className="block font-bold text-slate-700 mb-1">Nom (Arabe)</label>
+                  <input
+                    type="text"
+                    dir="rtl"
+                    value={productForm.name?.ar || ''}
+                    onChange={(e) => setProductForm({ ...productForm, name: { fr: productForm.name?.fr || '', ar: e.target.value } })}
+                    className="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-slate-900 focus:outline-none focus:border-blue-600"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Référence *</label>
                   <input
                     type="text"
                     required
                     value={productForm.reference || ''}
                     onChange={(e) => setProductForm({ ...productForm, reference: e.target.value })}
-                    className="w-full bg-slate-50 border p-2.5 rounded-xl"
+                    className="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-slate-900 font-mono focus:outline-none focus:border-blue-600"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Marque *</label>
+                  <select
+                    value={productForm.brandId || brands[0]?.id}
+                    onChange={(e) => {
+                      const selBrand = brands.find((b) => b.id === e.target.value);
+                      setProductForm({ ...productForm, brandId: e.target.value, brand: selBrand?.name || e.target.value });
+                    }}
+                    className="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-slate-900 font-semibold focus:outline-none focus:border-blue-600"
+                  >
+                    {brands.map((b) => (
+                      <option key={b.id} value={b.id}>{b.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Catégorie *</label>
+                  <select
+                    value={productForm.categoryId || 'gros-electromenager'}
+                    onChange={(e) => setProductForm({ ...productForm, categoryId: e.target.value, category: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-slate-900 font-semibold focus:outline-none focus:border-blue-600"
+                  >
+                    {categories.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name.fr}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Prix Vente (DH) *</label>
+                  <input
+                    type="number"
+                    required
+                    min={0}
+                    value={productForm.price || 0}
+                    onChange={(e) => setProductForm({ ...productForm, price: Number(e.target.value) })}
+                    className="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-slate-900 font-black focus:outline-none focus:border-blue-600"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Ancien Prix (DH)</label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={productForm.oldPrice || ''}
+                    onChange={(e) => setProductForm({ ...productForm, oldPrice: e.target.value ? Number(e.target.value) : undefined })}
+                    className="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-slate-900 focus:outline-none focus:border-blue-600"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Stock Disponible *</label>
+                  <input
+                    type="number"
+                    required
+                    min={0}
+                    value={productForm.stock ?? 10}
+                    onChange={(e) => setProductForm({ ...productForm, stock: Number(e.target.value) })}
+                    className="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-slate-900 font-bold focus:outline-none focus:border-blue-600"
                   />
                 </div>
               </div>
-              <button type="submit" className="w-full bg-blue-600 text-white font-bold py-3 rounded-xl">
-                Enregistrer dans la Base de Données
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Image Principale (URL) *</label>
+                <input
+                  type="text"
+                  required
+                  value={productForm.mainImage || ''}
+                  onChange={(e) => setProductForm({ ...productForm, mainImage: e.target.value, images: [e.target.value] })}
+                  className="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-slate-900 focus:outline-none focus:border-blue-600"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Description (Français)</label>
+                  <textarea
+                    rows={3}
+                    value={productForm.description?.fr || ''}
+                    onChange={(e) => setProductForm({ ...productForm, description: { fr: e.target.value, ar: productForm.description?.ar || '' } })}
+                    className="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-slate-900 focus:outline-none focus:border-blue-600"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Description (Arabe)</label>
+                  <textarea
+                    rows={3}
+                    dir="rtl"
+                    value={productForm.description?.ar || ''}
+                    onChange={(e) => setProductForm({ ...productForm, description: { fr: productForm.description?.fr || '', ar: e.target.value } })}
+                    className="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-slate-900 focus:outline-none focus:border-blue-600"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center gap-6 pt-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={productForm.isActive ?? true}
+                    onChange={(e) => setProductForm({ ...productForm, isActive: e.target.checked })}
+                    className="w-4 h-4 rounded text-blue-600"
+                  />
+                  <span className="font-bold text-slate-800">Actif (Visible en boutique)</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={productForm.featured ?? false}
+                    onChange={(e) => setProductForm({ ...productForm, featured: e.target.checked })}
+                    className="w-4 h-4 rounded text-blue-600"
+                  />
+                  <span className="font-bold text-slate-800">Mettre En Vedette (Page d accueil)</span>
+                </label>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-sm py-3.5 rounded-xl shadow-md transition-all mt-4"
+              >
+                Enregistrer dans la Base de Données Supabase
               </button>
             </form>
           </div>

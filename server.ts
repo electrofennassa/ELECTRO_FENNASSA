@@ -354,8 +354,11 @@ app.post('/api/orders', async (req: Request, res: Response) => {
 
     // Format items array for server validation
     const formattedItems = items.map((i: any) => ({
-      productId: i.productId || i.id,
+      productId: String(i.productId || i.id || ''),
       quantity: Math.max(1, parseInt(i.quantity, 10) || 1),
+      productName: typeof i.productName === 'string' ? i.productName : undefined,
+      productReference: typeof i.productReference === 'string' ? i.productReference : undefined,
+      price: typeof i.price === 'number' ? i.price : parseFloat(i.price) || undefined,
     }));
 
     const order = await dataManager.createOrder({
