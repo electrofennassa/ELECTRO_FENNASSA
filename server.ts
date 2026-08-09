@@ -8,7 +8,19 @@ import { OrderStatus } from './src/types';
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 
+// Enable JSON parsing
 app.use(express.json({ limit: '10mb' }));
+
+// CORS & Security Headers Middleware
+app.use((req: Request, res: Response, next: NextFunction) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  next();
+});
 
 // Auth & Security Configuration
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@electrofennassa.ma';
@@ -50,12 +62,16 @@ function requireAdminAuth(req: Request, res: Response, next: NextFunction) {
 }
 
 // ==========================================
-// API ROUTES
+// API ROUTER (Handles both /api/* and /* paths for Vercel Serverless)
 // ==========================================
+const apiRouter = express.Router();
 
 // 1. Health check
-app.get('/api/health', (req: Request, res: Response) => {
+apiRouter.get('/health', (req: Request, res: Response) => {
+  res.setHeader('Content-Type', 'application/json');
   res.json({
+    ok: true,
+    service: 'ELECTRO_FENNASSA_API',
     status: 'ok',
     store: 'ELECTRO_FENNASSA',
     city: 'Taourirt',
@@ -64,43 +80,51 @@ app.get('/api/health', (req: Request, res: Response) => {
 });
 
 // 2. Admin Authentication (Stateless JWT)
-app.post('/api/auth/login', (req: Request, res: Response) => {
-  const { email, password } = req.body;
+apiRouter.post('/auth/login', (req: Request, res: Response) => {
+  try {
+    const { email, password } = req.body || {};
 
-  if (!email || !password) {
-    return res.status(400).json({ error: 'Veuillez saisir un e-mail et un mot de passe.' });
-  }
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Veuillez saisir un e-mail et un mot de passe.' });
+    }
 
-  if (email.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim() && password === ADMIN_PASSWORD) {
-    const token = jwt.sign(
-      { email: ADMIN_EMAIL, role: 'admin' },
-      JWT_SECRET,
-      { expiresIn: '24h' }
-    );
+    if (email.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim() && password === ADMIN_PASSWORD) {
+      const token = jwt.sign(
+        { email: ADMIN_EMAIL, role: 'admin' },
+        JWT_SECRET,
+        { expiresIn: '24h' }
+      );
 
-    // Also set HttpOnly cookie for browser security if supported
-    res.cookie('admin_token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 24 * 60 * 60 * 1000,
+      // Also set HttpOnly cookie for browser security
+      res.cookie('admin_token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 24 * 60 * 60 * 1000,
+      });
+
+      return res.json({
+        success: true,
+        token,
+        user: {
+          id: 'usr-admin-1',
+          email: ADMIN_EMAIL,
+          role: 'admin',
+        },
+      });
+    } else {
+      return res.status(401).json({ error: 'E-mail ou mot de passe incorrect.' });
+    }
+  } catch (err: any) {
+    console.error('Login route error:', err);
+    return res.status(500).json({
+      error: 'Erreur serveur lors de la connexion',
+      details: process.env.NODE_ENV === 'production' ? undefined : err.message,
     });
-
-    return res.json({
-      success: true,
-      token,
-      user: {
-        id: 'usr-admin-1',
-        email: ADMIN_EMAIL,
-        role: 'admin',
-      },
-    });
-  } else {
-    return res.status(401).json({ error: 'E-mail ou mot de passe incorrect.' });
   }
 });
 
-app.get('/api/auth/me', (req: Request, res: Response) => {
+apiRouter.get('/auth/me', (req: Request, res: Response) => {
   let token: string | undefined;
 
   const authHeader = req.headers.authorization;
@@ -130,13 +154,13 @@ app.get('/api/auth/me', (req: Request, res: Response) => {
   }
 });
 
-app.post('/api/auth/logout', (req: Request, res: Response) => {
+apiRouter.post('/auth/logout', (req: Request, res: Response) => {
   res.clearCookie('admin_token');
   res.json({ success: true, message: 'Déconnexion réussie.' });
 });
 
 // 3. Products Endpoints
-app.get('/api/products', async (req: Request, res: Response) => {
+apiRouter.get('/products', async (req: Request, res: Response) => {
   try {
     const products = await dataManager.getProducts();
     res.json(products);
@@ -145,7 +169,7 @@ app.get('/api/products', async (req: Request, res: Response) => {
   }
 });
 
-app.post('/api/products', requireAdminAuth, async (req: Request, res: Response) => {
+apiRouter.post('/products', requireAdminAuth, async (req: Request, res: Response) => {
   try {
     const newProduct = await dataManager.createProduct(req.body);
     res.status(201).json(newProduct);
@@ -154,7 +178,7 @@ app.post('/api/products', requireAdminAuth, async (req: Request, res: Response) 
   }
 });
 
-app.put('/api/products/:id', requireAdminAuth, async (req: Request, res: Response) => {
+apiRouter.put('/products/:id', requireAdminAuth, async (req: Request, res: Response) => {
   try {
     const updated = await dataManager.updateProduct(req.params.id, req.body);
     if (!updated) return res.status(404).json({ error: 'Produit non trouvé.' });
@@ -164,7 +188,7 @@ app.put('/api/products/:id', requireAdminAuth, async (req: Request, res: Respons
   }
 });
 
-app.delete('/api/products/:id', requireAdminAuth, async (req: Request, res: Response) => {
+apiRouter.delete('/products/:id', requireAdminAuth, async (req: Request, res: Response) => {
   try {
     const ok = await dataManager.deleteProduct(req.params.id);
     if (!ok) return res.status(404).json({ error: 'Produit non trouvé.' });
@@ -175,7 +199,7 @@ app.delete('/api/products/:id', requireAdminAuth, async (req: Request, res: Resp
 });
 
 // 4. Categories Endpoints
-app.get('/api/categories', async (req: Request, res: Response) => {
+apiRouter.get('/categories', async (req: Request, res: Response) => {
   try {
     const categories = await dataManager.getCategories();
     res.json(categories);
@@ -184,7 +208,7 @@ app.get('/api/categories', async (req: Request, res: Response) => {
   }
 });
 
-app.post('/api/categories', requireAdminAuth, async (req: Request, res: Response) => {
+apiRouter.post('/categories', requireAdminAuth, async (req: Request, res: Response) => {
   try {
     const cat = await dataManager.createCategory(req.body);
     res.status(201).json(cat);
@@ -193,7 +217,7 @@ app.post('/api/categories', requireAdminAuth, async (req: Request, res: Response
   }
 });
 
-app.put('/api/categories/:id', requireAdminAuth, async (req: Request, res: Response) => {
+apiRouter.put('/categories/:id', requireAdminAuth, async (req: Request, res: Response) => {
   try {
     const updated = await dataManager.updateCategory(req.params.id, req.body);
     if (!updated) return res.status(404).json({ error: 'Catégorie non trouvée.' });
@@ -203,7 +227,7 @@ app.put('/api/categories/:id', requireAdminAuth, async (req: Request, res: Respo
   }
 });
 
-app.delete('/api/categories/:id', requireAdminAuth, async (req: Request, res: Response) => {
+apiRouter.delete('/categories/:id', requireAdminAuth, async (req: Request, res: Response) => {
   try {
     const ok = await dataManager.deleteCategory(req.params.id);
     if (!ok) return res.status(404).json({ error: 'Catégorie non trouvée.' });
@@ -214,7 +238,7 @@ app.delete('/api/categories/:id', requireAdminAuth, async (req: Request, res: Re
 });
 
 // 5. Brands Endpoints
-app.get('/api/brands', async (req: Request, res: Response) => {
+apiRouter.get('/brands', async (req: Request, res: Response) => {
   try {
     const brands = await dataManager.getBrands();
     res.json(brands);
@@ -223,7 +247,7 @@ app.get('/api/brands', async (req: Request, res: Response) => {
   }
 });
 
-app.post('/api/brands', requireAdminAuth, async (req: Request, res: Response) => {
+apiRouter.post('/brands', requireAdminAuth, async (req: Request, res: Response) => {
   try {
     const brand = await dataManager.createBrand(req.body);
     res.status(201).json(brand);
@@ -232,7 +256,7 @@ app.post('/api/brands', requireAdminAuth, async (req: Request, res: Response) =>
   }
 });
 
-app.put('/api/brands/:id', requireAdminAuth, async (req: Request, res: Response) => {
+apiRouter.put('/brands/:id', requireAdminAuth, async (req: Request, res: Response) => {
   try {
     const updated = await dataManager.updateBrand(req.params.id, req.body);
     if (!updated) return res.status(404).json({ error: 'Marque non trouvée.' });
@@ -242,7 +266,7 @@ app.put('/api/brands/:id', requireAdminAuth, async (req: Request, res: Response)
   }
 });
 
-app.delete('/api/brands/:id', requireAdminAuth, async (req: Request, res: Response) => {
+apiRouter.delete('/brands/:id', requireAdminAuth, async (req: Request, res: Response) => {
   try {
     const ok = await dataManager.deleteBrand(req.params.id);
     if (!ok) return res.status(404).json({ error: 'Marque non trouvée.' });
@@ -253,7 +277,7 @@ app.delete('/api/brands/:id', requireAdminAuth, async (req: Request, res: Respon
 });
 
 // 6. Promotions Endpoints
-app.get('/api/promotions', async (req: Request, res: Response) => {
+apiRouter.get('/promotions', async (req: Request, res: Response) => {
   try {
     const promotions = await dataManager.getPromotions();
     res.json(promotions);
@@ -262,7 +286,7 @@ app.get('/api/promotions', async (req: Request, res: Response) => {
   }
 });
 
-app.post('/api/promotions', requireAdminAuth, async (req: Request, res: Response) => {
+apiRouter.post('/promotions', requireAdminAuth, async (req: Request, res: Response) => {
   try {
     const promo = await dataManager.createPromotion(req.body);
     res.status(201).json(promo);
@@ -271,7 +295,7 @@ app.post('/api/promotions', requireAdminAuth, async (req: Request, res: Response
   }
 });
 
-app.put('/api/promotions/:id', requireAdminAuth, async (req: Request, res: Response) => {
+apiRouter.put('/promotions/:id', requireAdminAuth, async (req: Request, res: Response) => {
   try {
     const updated = await dataManager.updatePromotion(req.params.id, req.body);
     if (!updated) return res.status(404).json({ error: 'Promotion non trouvée.' });
@@ -281,7 +305,7 @@ app.put('/api/promotions/:id', requireAdminAuth, async (req: Request, res: Respo
   }
 });
 
-app.delete('/api/promotions/:id', requireAdminAuth, async (req: Request, res: Response) => {
+apiRouter.delete('/promotions/:id', requireAdminAuth, async (req: Request, res: Response) => {
   try {
     const ok = await dataManager.deletePromotion(req.params.id);
     if (!ok) return res.status(404).json({ error: 'Promotion non trouvée.' });
@@ -292,7 +316,7 @@ app.delete('/api/promotions/:id', requireAdminAuth, async (req: Request, res: Re
 });
 
 // 7. Packs Endpoints
-app.get('/api/packs', async (req: Request, res: Response) => {
+apiRouter.get('/packs', async (req: Request, res: Response) => {
   try {
     const packs = await dataManager.getPacks();
     res.json(packs);
@@ -301,7 +325,7 @@ app.get('/api/packs', async (req: Request, res: Response) => {
   }
 });
 
-app.post('/api/packs', requireAdminAuth, async (req: Request, res: Response) => {
+apiRouter.post('/packs', requireAdminAuth, async (req: Request, res: Response) => {
   try {
     const pack = await dataManager.createPack(req.body);
     res.status(201).json(pack);
@@ -310,7 +334,7 @@ app.post('/api/packs', requireAdminAuth, async (req: Request, res: Response) => 
   }
 });
 
-app.put('/api/packs/:id', requireAdminAuth, async (req: Request, res: Response) => {
+apiRouter.put('/packs/:id', requireAdminAuth, async (req: Request, res: Response) => {
   try {
     const updated = await dataManager.updatePack(req.params.id, req.body);
     if (!updated) return res.status(404).json({ error: 'Pack non trouvé.' });
@@ -320,7 +344,7 @@ app.put('/api/packs/:id', requireAdminAuth, async (req: Request, res: Response) 
   }
 });
 
-app.delete('/api/packs/:id', requireAdminAuth, async (req: Request, res: Response) => {
+apiRouter.delete('/packs/:id', requireAdminAuth, async (req: Request, res: Response) => {
   try {
     const ok = await dataManager.deletePack(req.params.id);
     if (!ok) return res.status(404).json({ error: 'Pack non trouvé.' });
@@ -330,10 +354,10 @@ app.delete('/api/packs/:id', requireAdminAuth, async (req: Request, res: Respons
   }
 });
 
-// 8. Public Order Placement Endpoint (With Strict Server-Side Validation & Price Recalculation)
-app.post('/api/orders', async (req: Request, res: Response) => {
+// 8. Public Order Placement Endpoint
+apiRouter.post('/orders', async (req: Request, res: Response) => {
   try {
-    const { fullName, phone, email, city, address, notes, items } = req.body;
+    const { fullName, phone, email, city, address, notes, items } = req.body || {};
 
     // Strict Input Validation
     if (!fullName || typeof fullName !== 'string' || fullName.trim().length < 2) {
@@ -352,7 +376,7 @@ app.post('/api/orders', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Votre panier est vide.' });
     }
 
-    // Format items array for server validation
+    // Format items array
     const formattedItems = items.map((i: any) => ({
       productId: String(i.productId || i.id || ''),
       quantity: Math.max(1, parseInt(i.quantity, 10) || 1),
@@ -379,7 +403,7 @@ app.post('/api/orders', async (req: Request, res: Response) => {
 });
 
 // 9. Protected Admin Orders Endpoints
-app.get('/api/orders', requireAdminAuth, async (req: Request, res: Response) => {
+apiRouter.get('/orders', requireAdminAuth, async (req: Request, res: Response) => {
   try {
     const orders = await dataManager.getOrders();
     res.json(orders);
@@ -388,7 +412,7 @@ app.get('/api/orders', requireAdminAuth, async (req: Request, res: Response) => 
   }
 });
 
-app.get('/api/orders/:id', requireAdminAuth, async (req: Request, res: Response) => {
+apiRouter.get('/orders/:id', requireAdminAuth, async (req: Request, res: Response) => {
   try {
     const order = await dataManager.getOrderById(req.params.id);
     if (!order) return res.status(404).json({ error: 'Commande non trouvée.' });
@@ -398,9 +422,9 @@ app.get('/api/orders/:id', requireAdminAuth, async (req: Request, res: Response)
   }
 });
 
-app.put('/api/orders/:id/status', requireAdminAuth, async (req: Request, res: Response) => {
+apiRouter.put('/orders/:id/status', requireAdminAuth, async (req: Request, res: Response) => {
   try {
-    const { status } = req.body;
+    const { status } = req.body || {};
     if (!status) return res.status(400).json({ error: 'Statut requis.' });
 
     const updated = await dataManager.updateOrderStatus(req.params.id, status as OrderStatus);
@@ -413,7 +437,7 @@ app.put('/api/orders/:id/status', requireAdminAuth, async (req: Request, res: Re
 });
 
 // 10. Protected Admin Customers Endpoints
-app.get('/api/customers', requireAdminAuth, async (req: Request, res: Response) => {
+apiRouter.get('/customers', requireAdminAuth, async (req: Request, res: Response) => {
   try {
     const customers = await dataManager.getCustomers();
     res.json(customers);
@@ -422,7 +446,7 @@ app.get('/api/customers', requireAdminAuth, async (req: Request, res: Response) 
   }
 });
 
-app.get('/api/customers/:id', requireAdminAuth, async (req: Request, res: Response) => {
+apiRouter.get('/customers/:id', requireAdminAuth, async (req: Request, res: Response) => {
   try {
     const customer = await dataManager.getCustomerById(req.params.id);
     if (!customer) return res.status(404).json({ error: 'Client non trouvé.' });
@@ -436,13 +460,35 @@ app.get('/api/customers/:id', requireAdminAuth, async (req: Request, res: Respon
 });
 
 // 11. Protected Admin Stats Endpoint
-app.get('/api/stats', requireAdminAuth, async (req: Request, res: Response) => {
+apiRouter.get('/stats', requireAdminAuth, async (req: Request, res: Response) => {
   try {
     const stats = await dataManager.getDashboardStats();
     res.json(stats);
   } catch (err) {
     res.status(500).json({ error: 'Erreur lors du calcul des statistiques.' });
   }
+});
+
+// Mount router on both /api and / to handle all Vercel rewrite shapes
+app.use('/api', apiRouter);
+app.use('/', apiRouter);
+
+// Fallback 404 handler for unmatched API routes (guarantees JSON output)
+app.use((req: Request, res: Response, next: NextFunction) => {
+  if (req.path.startsWith('/api') || req.headers.accept?.includes('application/json')) {
+    return res.status(404).json({ error: `Route API non trouvée: ${req.method} ${req.originalUrl || req.url}` });
+  }
+  next();
+});
+
+// Global Error Handler Middleware (ALWAYS returns JSON for API requests)
+app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
+  console.error('🔴 [UNHANDLED EXPRESS ERROR]:', err);
+  res.setHeader('Content-Type', 'application/json');
+  return res.status(500).json({
+    error: 'Erreur interne du serveur',
+    details: process.env.NODE_ENV === 'production' ? undefined : err?.message || String(err),
+  });
 });
 
 // ==========================================
