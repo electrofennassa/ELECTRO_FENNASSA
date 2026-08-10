@@ -41,6 +41,9 @@ import {
   ShieldCheck,
   Warehouse,
   Settings,
+  Upload,
+  Save,
+  Image as ImageIcon,
 } from 'lucide-react';
 
 export const AdminPage: React.FC = () => {
@@ -1073,29 +1076,41 @@ export const AdminPage: React.FC = () => {
             {categories.map((cat) => (
               <div
                 key={cat.id}
-                className="bg-slate-50 rounded-2xl p-4 border border-slate-200 flex items-center justify-between"
+                className="bg-slate-50 rounded-2xl p-4 border border-slate-200 flex items-center justify-between shadow-xs hover:border-blue-300 transition-all"
               >
-                <div className="flex items-center gap-3">
-                  <img src={cat.image} alt={cat.name.fr} className="w-12 h-12 object-cover rounded-xl" />
-                  <div>
-                    <h3 className="font-bold text-slate-900 text-sm">{cat.name.fr}</h3>
-                    <p className="text-xs text-slate-500">{cat.name.ar}</p>
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <img
+                    src={cat.image || 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80'}
+                    alt={cat.name.fr}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80';
+                    }}
+                    className="w-14 h-14 object-cover rounded-xl border border-slate-200 bg-white shrink-0 shadow-xs"
+                  />
+                  <div className="min-w-0">
+                    <h3 className="font-bold text-slate-900 text-sm truncate">{cat.name.fr}</h3>
+                    <p className="text-xs text-slate-500 truncate" dir="rtl">{cat.name.ar || 'لا يوجد اسم بالعربية'}</p>
+                    <span className="inline-block mt-1 text-[10px] font-mono bg-slate-200/70 text-slate-700 px-2 py-0.5 rounded-md truncate max-w-[150px]">
+                      {cat.slug || cat.id}
+                    </span>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0">
                   <button
                     onClick={() => handleEditCategory(cat)}
-                    className="p-2 bg-white rounded-xl border hover:bg-blue-50"
+                    className="p-2 bg-white rounded-xl border border-slate-200 hover:bg-blue-50 text-slate-700 hover:text-blue-600 transition-colors shadow-xs"
+                    title="Modifier la catégorie"
                   >
-                    <Edit2 className="w-4 h-4 text-slate-700" />
+                    <Edit2 className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() =>
                       setDeleteConfirm({ isOpen: true, type: 'category', id: cat.id, name: cat.name.fr })
                     }
-                    className="p-2 bg-white rounded-xl border hover:bg-rose-50"
+                    className="p-2 bg-white rounded-xl border border-slate-200 hover:bg-rose-50 text-slate-700 hover:text-rose-600 transition-colors shadow-xs"
+                    title="Supprimer la catégorie"
                   >
-                    <Trash2 className="w-4 h-4 text-slate-700" />
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
               </div>
@@ -1647,14 +1662,44 @@ export const AdminPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block font-bold text-slate-700 mb-1">Image Principale (URL) *</label>
-                <input
-                  type="text"
-                  required
-                  value={productForm.mainImage || ''}
-                  onChange={(e) => setProductForm({ ...productForm, mainImage: e.target.value, images: [e.target.value] })}
-                  className="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-slate-900 focus:outline-none focus:border-blue-600"
-                />
+                <label className="block font-bold text-slate-700 mb-1">Image Principale (URL ou Fichier) *</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    required
+                    placeholder="https://..."
+                    value={productForm.mainImage || ''}
+                    onChange={(e) => setProductForm({ ...productForm, mainImage: e.target.value, images: [e.target.value] })}
+                    className="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-slate-900 focus:outline-none focus:border-blue-600"
+                  />
+                  <label className="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl cursor-pointer font-bold text-xs shrink-0">
+                    <Upload className="w-4 h-4 text-blue-600" />
+                    <span>Importer</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            if (reader.result) {
+                              setProductForm({ ...productForm, mainImage: reader.result as string, images: [reader.result as string] });
+                            }
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                    />
+                  </label>
+                </div>
+                {productForm.mainImage && (
+                  <div className="mt-2 flex items-center gap-3 bg-slate-50 p-2 rounded-xl border border-slate-200">
+                    <img src={productForm.mainImage} alt="Aperçu produit" className="w-12 h-12 object-cover rounded-lg border bg-white" />
+                    <span className="text-slate-500 text-[11px] truncate">Aperçu du produit</span>
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1712,25 +1757,173 @@ export const AdminPage: React.FC = () => {
       )}
 
       {isCategoryModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white w-full max-w-md rounded-3xl p-6 space-y-4 shadow-2xl">
-            <div className="flex justify-between items-center border-b pb-2">
-              <h3 className="font-black text-slate-900 text-base">Catégorie</h3>
-              <button onClick={() => setIsCategoryModalOpen(false)}><X className="w-5 h-5" /></button>
-            </div>
-            <form onSubmit={handleSaveCategory} className="space-y-3 text-xs">
+        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white w-full max-w-lg rounded-3xl p-6 sm:p-7 space-y-5 shadow-2xl my-8 border border-slate-100">
+            <div className="flex justify-between items-center border-b border-slate-100 pb-3">
               <div>
-                <label className="block font-bold mb-1">Nom (Français) *</label>
-                <input
-                  type="text"
-                  required
-                  value={categoryForm.name?.fr || ''}
-                  onChange={(e) => setCategoryForm({ ...categoryForm, name: { fr: e.target.value, ar: categoryForm.name?.ar || '' } })}
-                  className="w-full bg-slate-50 border p-2.5 rounded-xl"
-                />
+                <h3 className="font-black text-slate-900 text-base sm:text-lg">
+                  {editingCategoryId ? 'Modifier la Catégorie' : 'Ajouter une Nouvelle Catégorie'}
+                </h3>
+                <p className="text-xs text-slate-500">Définissez le nom, la traduction et l'image de la catégorie</p>
               </div>
-              <button type="submit" className="w-full bg-blue-600 text-white font-bold py-3 rounded-xl">
-                Enregistrer la Catégorie
+              <button
+                onClick={() => setIsCategoryModalOpen(false)}
+                className="p-1.5 text-slate-400 hover:text-slate-800 rounded-xl hover:bg-slate-100 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveCategory} className="space-y-4 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Nom (Français) *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ex: Réfrigérateurs"
+                    value={categoryForm.name?.fr || ''}
+                    onChange={(e) => setCategoryForm({ ...categoryForm, name: { fr: e.target.value, ar: categoryForm.name?.ar || '' } })}
+                    className="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-slate-900 focus:outline-none focus:border-blue-600 font-medium"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Nom (Arabe)</label>
+                  <input
+                    type="text"
+                    dir="rtl"
+                    placeholder="مثال: ثلاجات"
+                    value={categoryForm.name?.ar || ''}
+                    onChange={(e) => setCategoryForm({ ...categoryForm, name: { fr: categoryForm.name?.fr || '', ar: e.target.value } })}
+                    className="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-slate-900 focus:outline-none focus:border-blue-600 font-medium"
+                  />
+                </div>
+              </div>
+
+              {/* IMAGE URL & UPLOAD FIELD */}
+              <div className="space-y-2.5 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                <label className="block font-bold text-slate-800 text-xs">
+                  Image de la Catégorie (URL web ou Fichier local) *
+                </label>
+
+                {/* URL Input */}
+                <div>
+                  <span className="text-[11px] font-semibold text-slate-600 block mb-1">Option A : Saisir ou coller une URL d'image</span>
+                  <input
+                    type="url"
+                    placeholder="https://images.unsplash.com/photo-..."
+                    value={categoryForm.image || ''}
+                    onChange={(e) => setCategoryForm({ ...categoryForm, image: e.target.value })}
+                    className="w-full bg-white border border-slate-300 p-2.5 rounded-xl text-slate-900 text-xs focus:outline-none focus:border-blue-600"
+                  />
+                </div>
+
+                {/* File Upload Button */}
+                <div className="pt-1">
+                  <span className="text-[11px] font-semibold text-slate-600 block mb-1">Option B : Importer une image depuis votre téléphone ou PC</span>
+                  <label className="inline-flex items-center gap-2 px-3.5 py-2 bg-white border border-slate-300 hover:bg-slate-100 rounded-xl cursor-pointer text-slate-800 font-bold text-xs transition-all shadow-xs">
+                    <Upload className="w-4 h-4 text-blue-600" />
+                    <span>Choisir un fichier image</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            if (reader.result) {
+                              setCategoryForm({ ...categoryForm, image: reader.result as string });
+                            }
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                    />
+                  </label>
+                </div>
+
+                {/* PRESET IMAGES QUICK PICKER */}
+                <div className="pt-2 border-t border-slate-200">
+                  <span className="text-[11px] font-bold text-slate-600 block mb-1.5">
+                    Images suggérées Électroménager (cliquez pour appliquer) :
+                  </span>
+                  <div className="flex gap-2 overflow-x-auto pb-1">
+                    {[
+                      { label: 'Réfrigérateur', url: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80' },
+                      { label: 'Lave-linge', url: 'https://images.unsplash.com/photo-1626806787461-102c1bfaaea1?auto=format&fit=crop&w=800&q=80' },
+                      { label: 'Cuisinière', url: 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=800&q=80' },
+                      { label: 'Téléviseur', url: 'https://images.unsplash.com/photo-1593784991095-a205069470b6?auto=format&fit=crop&w=800&q=80' },
+                      { label: 'Climatiseur', url: 'https://images.unsplash.com/photo-1614633833026-062030018f67?auto=format&fit=crop&w=800&q=80' },
+                      { label: 'Petit-Électro', url: 'https://images.unsplash.com/photo-1570222094114-d054a817e56b?auto=format&fit=crop&w=800&q=80' },
+                    ].map((preset, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setCategoryForm({ ...categoryForm, image: preset.url })}
+                        className="shrink-0 flex flex-col items-center gap-1 p-1 bg-white border border-slate-200 rounded-xl hover:border-blue-500 hover:shadow-xs transition-all"
+                      >
+                        <img src={preset.url} alt={preset.label} className="w-12 h-12 object-cover rounded-lg" />
+                        <span className="text-[9px] font-medium text-slate-700 truncate max-w-[65px]">
+                          {preset.label}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* LIVE IMAGE PREVIEW */}
+                {categoryForm.image ? (
+                  <div className="pt-2 border-t border-slate-200 flex items-center gap-3 bg-white p-2.5 rounded-xl border border-slate-200">
+                    <img
+                      src={categoryForm.image}
+                      alt="Aperçu"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80';
+                      }}
+                      className="w-16 h-16 object-cover rounded-xl border border-slate-200 shrink-0"
+                    />
+                    <div className="min-w-0">
+                      <span className="font-bold text-slate-900 text-xs block">Aperçu direct de l'image</span>
+                      <span className="text-[10px] text-slate-500 block truncate max-w-[240px]">
+                        {categoryForm.image.startsWith('data:') ? 'Image locale sélectionnée' : categoryForm.image}
+                      </span>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Description (Français)</label>
+                  <textarea
+                    rows={2}
+                    placeholder="Description optionnelle..."
+                    value={categoryForm.description?.fr || ''}
+                    onChange={(e) => setCategoryForm({ ...categoryForm, description: { fr: e.target.value, ar: categoryForm.description?.ar || '' } })}
+                    className="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-slate-900 focus:outline-none focus:border-blue-600"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Description (Arabe)</label>
+                  <textarea
+                    rows={2}
+                    dir="rtl"
+                    placeholder="وصف اختياري..."
+                    value={categoryForm.description?.ar || ''}
+                    onChange={(e) => setCategoryForm({ ...categoryForm, description: { fr: categoryForm.description?.fr || '', ar: e.target.value } })}
+                    className="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-slate-900 focus:outline-none focus:border-blue-600"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs py-3.5 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 mt-2"
+              >
+                <Save className="w-4 h-4" />
+                <span>Enregistrer la Catégorie</span>
               </button>
             </form>
           </div>
@@ -1741,7 +1934,9 @@ export const AdminPage: React.FC = () => {
         <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white w-full max-w-md rounded-3xl p-6 space-y-4 shadow-2xl">
             <div className="flex justify-between items-center border-b pb-2">
-              <h3 className="font-black text-slate-900 text-base">Marque</h3>
+              <h3 className="font-black text-slate-900 text-base">
+                {editingBrandId ? 'Modifier la Marque' : 'Ajouter une Marque'}
+              </h3>
               <button onClick={() => setIsBrandModalOpen(false)}><X className="w-5 h-5" /></button>
             </div>
             <form onSubmit={handleSaveBrand} className="space-y-3 text-xs">
@@ -1750,12 +1945,53 @@ export const AdminPage: React.FC = () => {
                 <input
                   type="text"
                   required
+                  placeholder="Ex: Samsung, LG, Whirlpool..."
                   value={brandForm.name || ''}
                   onChange={(e) => setBrandForm({ ...brandForm, name: e.target.value })}
                   className="w-full bg-slate-50 border p-2.5 rounded-xl"
                 />
               </div>
-              <button type="submit" className="w-full bg-blue-600 text-white font-bold py-3 rounded-xl">
+              <div>
+                <label className="block font-bold mb-1">Logo / Image (URL ou Fichier) *</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    required
+                    placeholder="https://..."
+                    value={brandForm.logo || ''}
+                    onChange={(e) => setBrandForm({ ...brandForm, logo: e.target.value })}
+                    className="w-full bg-slate-50 border p-2.5 rounded-xl"
+                  />
+                  <label className="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl cursor-pointer font-bold text-xs shrink-0">
+                    <Upload className="w-4 h-4 text-blue-600" />
+                    <span>Importer</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            if (reader.result) {
+                              setBrandForm({ ...brandForm, logo: reader.result as string });
+                            }
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                    />
+                  </label>
+                </div>
+              </div>
+              {brandForm.logo && (
+                <div className="mt-2 flex items-center gap-3 bg-slate-50 p-2 rounded-xl border">
+                  <img src={brandForm.logo} alt="Aperçu logo" className="w-12 h-12 object-contain bg-white rounded-lg border p-1" />
+                  <span className="text-slate-500 text-[11px] truncate">Aperçu du logo</span>
+                </div>
+              )}
+              <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-colors">
                 Enregistrer la Marque
               </button>
             </form>
@@ -1767,12 +2003,14 @@ export const AdminPage: React.FC = () => {
         <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white w-full max-w-md rounded-3xl p-6 space-y-4 shadow-2xl">
             <div className="flex justify-between items-center border-b pb-2">
-              <h3 className="font-black text-slate-900 text-base">Promotion</h3>
+              <h3 className="font-black text-slate-900 text-base">
+                {editingPromotionId ? 'Modifier la Promotion' : 'Ajouter une Promotion'}
+              </h3>
               <button onClick={() => setIsPromotionModalOpen(false)}><X className="w-5 h-5" /></button>
             </div>
             <form onSubmit={handleSavePromotion} className="space-y-3 text-xs">
               <div>
-                <label className="block font-bold mb-1">Nouveau Prix (DH) *</label>
+                <label className="block font-bold mb-1">Nouveau Prix Promo (DH) *</label>
                 <input
                   type="number"
                   required
@@ -1781,7 +2019,7 @@ export const AdminPage: React.FC = () => {
                   className="w-full bg-slate-50 border p-2.5 rounded-xl"
                 />
               </div>
-              <button type="submit" className="w-full bg-blue-600 text-white font-bold py-3 rounded-xl">
+              <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-colors">
                 Enregistrer la Promotion
               </button>
             </form>
@@ -1793,7 +2031,9 @@ export const AdminPage: React.FC = () => {
         <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white w-full max-w-md rounded-3xl p-6 space-y-4 shadow-2xl">
             <div className="flex justify-between items-center border-b pb-2">
-              <h3 className="font-black text-slate-900 text-base">Pack</h3>
+              <h3 className="font-black text-slate-900 text-base">
+                {editingPackId ? 'Modifier le Pack' : 'Ajouter un Pack'}
+              </h3>
               <button onClick={() => setIsPackModalOpen(false)}><X className="w-5 h-5" /></button>
             </div>
             <form onSubmit={handleSavePack} className="space-y-3 text-xs">
@@ -1808,6 +2048,56 @@ export const AdminPage: React.FC = () => {
                 />
               </div>
               <div>
+                <label className="block font-bold mb-1">Nom du Pack (Arabe)</label>
+                <input
+                  type="text"
+                  dir="rtl"
+                  value={packForm.name?.ar || ''}
+                  onChange={(e) => setPackForm({ ...packForm, name: { fr: packForm.name?.fr || '', ar: e.target.value } })}
+                  className="w-full bg-slate-50 border p-2.5 rounded-xl"
+                />
+              </div>
+              <div>
+                <label className="block font-bold mb-1">Image du Pack (URL ou Fichier) *</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    required
+                    placeholder="https://..."
+                    value={packForm.image || ''}
+                    onChange={(e) => setPackForm({ ...packForm, image: e.target.value })}
+                    className="w-full bg-slate-50 border p-2.5 rounded-xl"
+                  />
+                  <label className="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl cursor-pointer font-bold text-xs shrink-0">
+                    <Upload className="w-4 h-4 text-blue-600" />
+                    <span>Importer</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            if (reader.result) {
+                              setPackForm({ ...packForm, image: reader.result as string });
+                            }
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                    />
+                  </label>
+                </div>
+              </div>
+              {packForm.image && (
+                <div className="mt-2 flex items-center gap-3 bg-slate-50 p-2 rounded-xl border">
+                  <img src={packForm.image} alt="Aperçu pack" className="w-12 h-12 object-cover rounded-lg border" />
+                  <span className="text-slate-500 text-[11px] truncate">Aperçu du pack</span>
+                </div>
+              )}
+              <div>
                 <label className="block font-bold mb-1">Prix du Pack (DH) *</label>
                 <input
                   type="number"
@@ -1817,7 +2107,7 @@ export const AdminPage: React.FC = () => {
                   className="w-full bg-slate-50 border p-2.5 rounded-xl"
                 />
               </div>
-              <button type="submit" className="w-full bg-blue-600 text-white font-bold py-3 rounded-xl">
+              <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-colors">
                 Enregistrer le Pack
               </button>
             </form>
