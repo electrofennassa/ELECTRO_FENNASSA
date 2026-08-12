@@ -35,7 +35,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       {/* Top Image & Badges */}
       <div className="relative aspect-4/3 overflow-hidden bg-slate-50 cursor-pointer" onClick={handleOpenDetail}>
         <img
-          src={product.mainImage}
+          src={product.image1 || product.mainImage || product.images?.[0] || 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80'}
           alt={product.name[lang]}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           loading="lazy"

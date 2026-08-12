@@ -225,6 +225,9 @@ export const AdminPage: React.FC = () => {
       isNew: true,
       isPromotion: false,
       isActive: true,
+      image1: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80',
+      image2: '',
+      image3: '',
       mainImage: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80',
       images: ['https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80'],
       technicalSpecifications: [
@@ -237,18 +240,42 @@ export const AdminPage: React.FC = () => {
 
   const handleEditProduct = (prod: Product) => {
     setEditingProductId(prod.id);
-    setProductForm({ ...prod });
+    const img1 = prod.image1 || prod.mainImage || prod.images?.[0] || '';
+    const img2 = prod.image2 || prod.images?.[1] || '';
+    const img3 = prod.image3 || prod.images?.[2] || '';
+    setProductForm({
+      ...prod,
+      image1: img1,
+      image2: img2,
+      image3: img3,
+      mainImage: img1 || prod.mainImage || '',
+      images: [img1, img2, img3].filter(Boolean),
+    });
     setIsProductModalOpen(true);
   };
 
   const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!productForm.name?.fr || !productForm.price) return;
+    if (!productForm.name?.fr || productForm.price === undefined) return;
+
+    const img1 = productForm.image1 || productForm.mainImage || productForm.images?.[0] || '';
+    const img2 = productForm.image2 || '';
+    const img3 = productForm.image3 || '';
+    const imagesArr = [img1, img2, img3].filter(Boolean);
+
+    const payload = {
+      ...productForm,
+      image1: img1,
+      image2: img2,
+      image3: img3,
+      mainImage: img1 || img2 || img3 || '',
+      images: imagesArr,
+    };
 
     if (editingProductId) {
-      await updateProduct(editingProductId, productForm);
+      await updateProduct(editingProductId, payload);
     } else {
-      await addProduct(productForm);
+      await addProduct(payload);
     }
     setIsProductModalOpen(false);
   };
@@ -1661,45 +1688,186 @@ export const AdminPage: React.FC = () => {
                 </div>
               </div>
 
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">Image Principale (URL ou Fichier) *</label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    required
-                    placeholder="https://..."
-                    value={productForm.mainImage || ''}
-                    onChange={(e) => setProductForm({ ...productForm, mainImage: e.target.value, images: [e.target.value] })}
-                    className="w-full bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-slate-900 focus:outline-none focus:border-blue-600"
-                  />
-                  <label className="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl cursor-pointer font-bold text-xs shrink-0">
-                    <Upload className="w-4 h-4 text-blue-600" />
-                    <span>Importer</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          const reader = new FileReader();
-                          reader.onloadend = () => {
-                            if (reader.result) {
-                              setProductForm({ ...productForm, mainImage: reader.result as string, images: [reader.result as string] });
-                            }
-                          };
-                          reader.readAsDataURL(file);
-                        }
-                      }}
-                    />
-                  </label>
+              {/* Images Section (3 Images max) */}
+              <div className="space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                <div className="flex items-center justify-between">
+                  <label className="font-black text-slate-900 text-xs">Images du Produit (jusqu'à 3 images facultatives)</label>
+                  <span className="text-[10px] text-slate-500 font-medium">URL Web ou Fichier local</span>
                 </div>
-                {productForm.mainImage && (
-                  <div className="mt-2 flex items-center gap-3 bg-slate-50 p-2 rounded-xl border border-slate-200">
-                    <img src={productForm.mainImage} alt="Aperçu produit" className="w-12 h-12 object-cover rounded-lg border bg-white" />
-                    <span className="text-slate-500 text-[11px] truncate">Aperçu du produit</span>
+
+                {/* Image 1 */}
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Image 1 (Principale)</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="https://..."
+                      value={productForm.image1 || ''}
+                      onChange={(e) => setProductForm({ ...productForm, image1: e.target.value })}
+                      className="w-full bg-white border border-slate-200 p-2.5 rounded-xl text-slate-900 focus:outline-none focus:border-blue-600"
+                    />
+                    <label className="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl cursor-pointer font-bold text-xs shrink-0">
+                      <Upload className="w-4 h-4 text-blue-600" />
+                      <span>Importer</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              if (reader.result) {
+                                setProductForm({ ...productForm, image1: reader.result as string });
+                              }
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                    </label>
+                    {productForm.image1 && (
+                      <button
+                        type="button"
+                        onClick={() => setProductForm({ ...productForm, image1: '' })}
+                        className="px-2.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl border border-rose-200 shrink-0 font-bold text-xs"
+                        title="Vider l image 1"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
-                )}
+                  {productForm.image1 && (
+                    <div className="mt-1.5 flex items-center gap-3 bg-white p-1.5 rounded-xl border border-slate-200">
+                      <img
+                        src={productForm.image1}
+                        alt="Aperçu Image 1"
+                        className="w-10 h-10 object-cover rounded-lg border bg-slate-50"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80';
+                        }}
+                      />
+                      <span className="text-slate-500 text-[11px] truncate">Aperçu Image 1</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Image 2 */}
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Image 2 (Optionnelle)</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="https://..."
+                      value={productForm.image2 || ''}
+                      onChange={(e) => setProductForm({ ...productForm, image2: e.target.value })}
+                      className="w-full bg-white border border-slate-200 p-2.5 rounded-xl text-slate-900 focus:outline-none focus:border-blue-600"
+                    />
+                    <label className="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl cursor-pointer font-bold text-xs shrink-0">
+                      <Upload className="w-4 h-4 text-blue-600" />
+                      <span>Importer</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              if (reader.result) {
+                                setProductForm({ ...productForm, image2: reader.result as string });
+                              }
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                    </label>
+                    {productForm.image2 && (
+                      <button
+                        type="button"
+                        onClick={() => setProductForm({ ...productForm, image2: '' })}
+                        className="px-2.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl border border-rose-200 shrink-0 font-bold text-xs"
+                        title="Vider l image 2"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                  {productForm.image2 && (
+                    <div className="mt-1.5 flex items-center gap-3 bg-white p-1.5 rounded-xl border border-slate-200">
+                      <img
+                        src={productForm.image2}
+                        alt="Aperçu Image 2"
+                        className="w-10 h-10 object-cover rounded-lg border bg-slate-50"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80';
+                        }}
+                      />
+                      <span className="text-slate-500 text-[11px] truncate">Aperçu Image 2</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Image 3 */}
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Image 3 (Optionnelle)</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="https://..."
+                      value={productForm.image3 || ''}
+                      onChange={(e) => setProductForm({ ...productForm, image3: e.target.value })}
+                      className="w-full bg-white border border-slate-200 p-2.5 rounded-xl text-slate-900 focus:outline-none focus:border-blue-600"
+                    />
+                    <label className="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl cursor-pointer font-bold text-xs shrink-0">
+                      <Upload className="w-4 h-4 text-blue-600" />
+                      <span>Importer</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              if (reader.result) {
+                                setProductForm({ ...productForm, image3: reader.result as string });
+                              }
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                    </label>
+                    {productForm.image3 && (
+                      <button
+                        type="button"
+                        onClick={() => setProductForm({ ...productForm, image3: '' })}
+                        className="px-2.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl border border-rose-200 shrink-0 font-bold text-xs"
+                        title="Vider l image 3"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                  {productForm.image3 && (
+                    <div className="mt-1.5 flex items-center gap-3 bg-white p-1.5 rounded-xl border border-slate-200">
+                      <img
+                        src={productForm.image3}
+                        alt="Aperçu Image 3"
+                        className="w-10 h-10 object-cover rounded-lg border bg-slate-50"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80';
+                        }}
+                      />
+                      <span className="text-slate-500 text-[11px] truncate">Aperçu Image 3</span>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

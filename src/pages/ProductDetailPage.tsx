@@ -58,8 +58,18 @@ export const ProductDetailPage: React.FC = () => {
 
   const p = selectedProduct;
   const isFav = isInWishlist(p.id);
-  const allImages = p.images && p.images.length > 0 ? p.images : [p.mainImage];
-  const activeImage = allImages[activeImageIndex] || p.mainImage;
+  const rawList = [
+    p.image1,
+    p.image2,
+    p.image3,
+    ...(p.images || []),
+    p.mainImage,
+  ].filter((img): img is string => Boolean(img && img.trim()));
+  const allImages = Array.from(new Set(rawList));
+  if (allImages.length === 0) {
+    allImages.push('https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80');
+  }
+  const activeImage = allImages[activeImageIndex] || allImages[0];
 
   const discountPercent = p.oldPrice && p.oldPrice > p.price
     ? Math.round(((p.oldPrice - p.price) / p.oldPrice) * 100)

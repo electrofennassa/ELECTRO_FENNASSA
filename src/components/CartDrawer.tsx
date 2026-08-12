@@ -76,7 +76,7 @@ export const CartDrawer: React.FC = () => {
                 className="flex items-center gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-200/80"
               >
                 <img
-                  src={item.product.mainImage}
+                  src={item.product.image1 || item.product.mainImage || item.product.images?.[0] || 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80'}
                   alt={item.product.name[lang]}
                   className="w-16 h-16 object-cover rounded-xl border border-slate-200 shrink-0 bg-white"
                 />

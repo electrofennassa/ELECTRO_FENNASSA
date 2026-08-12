@@ -44,6 +44,14 @@ export const supabaseDb = {
         ? Object.entries(p.specifications).map(([k, v]) => ({ label: { fr: String(k), ar: String(k) }, value: { fr: String(v), ar: String(v) } }))
         : [];
 
+      const rawImages: string[] = Array.isArray(p.images) ? p.images : [];
+      const img1 = p.image1 || rawImages[0] || p.main_image || '';
+      const img2 = p.image2 || rawImages[1] || '';
+      const img3 = p.image3 || rawImages[2] || '';
+      const allImgs = [img1, img2, img3].filter(Boolean);
+      const imagesList = allImgs.length > 0 ? allImgs : [p.main_image || img1 || ''].filter(Boolean);
+      const mainImg = img1 || p.main_image || imagesList[0] || '';
+
       return {
         id: p.id,
         reference: p.reference || '',
@@ -57,8 +65,11 @@ export const supabaseDb = {
         brand: p.brand_id || 'Électroménager',
         categoryId: p.category_id || 'gros-electromenager',
         category: p.category_id || 'gros-electromenager',
-        mainImage: p.main_image || '',
-        images: Array.isArray(p.images) && p.images.length > 0 ? p.images : [p.main_image || ''],
+        image1: img1,
+        image2: img2,
+        image3: img3,
+        mainImage: mainImg,
+        images: imagesList,
         technicalSpecifications: specs,
         specifications: specs,
         warranty: `${p.warranty_months || 12} Mois`,
@@ -76,6 +87,11 @@ export const supabaseDb = {
     if (!client) throw new Error('Supabase Client non configuré.');
 
     const newId = product.id || `prod-${Date.now()}`;
+    const img1 = product.image1 || product.mainImage || (product.images && product.images[0]) || '';
+    const img2 = product.image2 || (product.images && product.images[1]) || '';
+    const img3 = product.image3 || (product.images && product.images[2]) || '';
+    const imagesArr = [img1, img2, img3].filter(Boolean);
+
     const row: any = {
       id: newId,
       reference: product.reference || `REF-${Date.now()}`,
@@ -88,8 +104,8 @@ export const supabaseDb = {
       old_price: product.oldPrice || null,
       category_id: product.categoryId || null,
       brand_id: product.brandId || null,
-      main_image: product.mainImage || '',
-      images: product.images || [],
+      main_image: img1 || '',
+      images: imagesArr,
       specifications: product.specifications || {},
       warranty_months: 12,
       is_featured: product.featured ?? false,
@@ -104,6 +120,11 @@ export const supabaseDb = {
 
     const price = Number(data.price);
     const oldPrice = data.old_price ? Number(data.old_price) : undefined;
+    const resRawImgs: string[] = Array.isArray(data.images) ? data.images : [];
+    const resImg1 = data.image1 || resRawImgs[0] || data.main_image || img1 || '';
+    const resImg2 = data.image2 || resRawImgs[1] || img2 || '';
+    const resImg3 = data.image3 || resRawImgs[2] || img3 || '';
+    const resImgs = [resImg1, resImg2, resImg3].filter(Boolean);
 
     return {
       id: data.id,
@@ -118,8 +139,11 @@ export const supabaseDb = {
       brand: data.brand_id || 'Électroménager',
       categoryId: data.category_id || 'gros-electromenager',
       category: data.category_id || 'gros-electromenager',
-      mainImage: data.main_image,
-      images: data.images || [data.main_image],
+      image1: resImg1,
+      image2: resImg2,
+      image3: resImg3,
+      mainImage: resImg1 || data.main_image || '',
+      images: resImgs.length > 0 ? resImgs : [data.main_image || ''],
       technicalSpecifications: [],
       specifications: [],
       warranty: '12 Mois',
@@ -150,8 +174,19 @@ export const supabaseDb = {
     if (updates.oldPrice !== undefined) patch.old_price = updates.oldPrice;
     if (updates.categoryId !== undefined) patch.category_id = updates.categoryId;
     if (updates.brandId !== undefined) patch.brand_id = updates.brandId;
-    if (updates.mainImage) patch.main_image = updates.mainImage;
-    if (updates.images) patch.images = updates.images;
+
+    const img1 = updates.image1 !== undefined ? updates.image1 : updates.mainImage;
+    const img2 = updates.image2;
+    const img3 = updates.image3;
+
+    if (img1 !== undefined) patch.main_image = img1;
+    if (updates.images) {
+      patch.images = updates.images;
+    } else {
+      const imgList = [img1, img2, img3].filter((x): x is string => typeof x === 'string' && x.length > 0);
+      if (imgList.length > 0) patch.images = imgList;
+    }
+
     if (updates.featured !== undefined) patch.is_featured = updates.featured;
     if (updates.isActive !== undefined) patch.is_active = updates.isActive;
 
@@ -166,6 +201,12 @@ export const supabaseDb = {
     const price = Number(data.price);
     const oldPrice = data.old_price ? Number(data.old_price) : undefined;
 
+    const resRawImgs: string[] = Array.isArray(data.images) ? data.images : [];
+    const resImg1 = data.image1 || resRawImgs[0] || data.main_image || img1 || '';
+    const resImg2 = data.image2 || resRawImgs[1] || img2 || '';
+    const resImg3 = data.image3 || resRawImgs[2] || img3 || '';
+    const resImgs = [resImg1, resImg2, resImg3].filter(Boolean);
+
     return {
       id: data.id,
       reference: data.reference,
@@ -179,8 +220,11 @@ export const supabaseDb = {
       brand: data.brand_id || 'Électroménager',
       categoryId: data.category_id || 'gros-electromenager',
       category: data.category_id || 'gros-electromenager',
-      mainImage: data.main_image,
-      images: data.images || [data.main_image],
+      image1: resImg1,
+      image2: resImg2,
+      image3: resImg3,
+      mainImage: resImg1 || data.main_image || '',
+      images: resImgs.length > 0 ? resImgs : [data.main_image || ''],
       technicalSpecifications: [],
       specifications: [],
       warranty: '12 Mois',

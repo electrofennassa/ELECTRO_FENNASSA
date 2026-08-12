@@ -305,6 +305,11 @@ class JsonDatabase {
       ? Math.round(((oldPrice - price) / oldPrice) * 100)
       : data.discountPercentage || 0;
 
+    const img1 = data.image1 || data.mainImage || data.images?.[0] || 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80';
+    const img2 = data.image2 || data.images?.[1] || '';
+    const img3 = data.image3 || data.images?.[2] || '';
+    const imagesArr = [img1, img2, img3].filter(Boolean);
+
     const newProd: Product = {
       id,
       slug,
@@ -334,8 +339,11 @@ class JsonDatabase {
       createdAt: now,
       updatedAt: now,
       badge: data.badge,
-      mainImage: data.mainImage || 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80',
-      images: data.images && data.images.length > 0 ? data.images : [data.mainImage || 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80'],
+      image1: img1,
+      image2: img2,
+      image3: img3,
+      mainImage: img1,
+      images: imagesArr,
       featured: data.featured || false,
     };
 
@@ -355,12 +363,22 @@ class JsonDatabase {
       ? Math.round(((oldPrice - price) / oldPrice) * 100)
       : 0;
 
+    const img1 = data.image1 !== undefined ? data.image1 : (data.mainImage !== undefined ? data.mainImage : (existing.image1 || existing.mainImage || existing.images?.[0] || ''));
+    const img2 = data.image2 !== undefined ? data.image2 : (existing.image2 || existing.images?.[1] || '');
+    const img3 = data.image3 !== undefined ? data.image3 : (existing.image3 || existing.images?.[2] || '');
+    const imagesArr = [img1, img2, img3].filter(Boolean);
+
     const updated: Product = {
       ...existing,
       ...data,
       price,
       oldPrice,
       discountPercentage,
+      image1: img1,
+      image2: img2,
+      image3: img3,
+      mainImage: img1 || existing.mainImage || '',
+      images: imagesArr.length > 0 ? imagesArr : existing.images || [],
       isPromotion: discountPercentage > 0,
       isPromo: discountPercentage > 0,
       updatedAt: new Date().toISOString(),

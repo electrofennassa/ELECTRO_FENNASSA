@@ -85,8 +85,11 @@ export interface Product {
     fr: string;
     ar: string;
   };
-  mainImage: string;
-  images: string[];
+  image1?: string;
+  image2?: string;
+  image3?: string;
+  mainImage?: string;
+  images?: string[];
   featured?: boolean;
 }
 
