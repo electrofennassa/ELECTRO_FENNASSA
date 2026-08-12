@@ -40,6 +40,76 @@ export const INITIAL_CATEGORIES: Category[] = [
     image: 'https://images.unsplash.com/photo-1570222094114-d054a817e56b?auto=format&fit=crop&w=800&q=80',
     isActive: true,
   },
+  {
+    id: 'refrigerateurs',
+    name: {
+      fr: 'Réfrigérateurs & Congélateurs',
+      ar: 'الثلاجات والمجمدات',
+    },
+    slug: 'refrigerateurs',
+    description: {
+      fr: 'Conservation optimale pour vos aliments avec nos réfrigérateurs NoFrost et congélateurs combinés.',
+      ar: 'حفظ مثالي لأطعمتك مع ثلاجاتنا الحديثة والمجمدات.',
+    },
+    image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80',
+    isActive: true,
+  },
+  {
+    id: 'lave-linge',
+    name: {
+      fr: 'Machines à laver & Séchoirs',
+      ar: 'الغسالات ومجففات الملابس',
+    },
+    slug: 'lave-linge',
+    description: {
+      fr: 'Lavez et séchez votre linge en toute simplicité avec des machines économiques et silencieuses.',
+      ar: 'غسيل وتجفيف ملابسك بكل سهولة مع أجهزة اقتصادية وهادئة.',
+    },
+    image: 'https://images.unsplash.com/photo-1626806787461-102c1bfaaea1?auto=format&fit=crop&w=800&q=80',
+    isActive: true,
+  },
+  {
+    id: 'climatiseurs',
+    name: {
+      fr: 'Climatiseurs & Chauffages',
+      ar: 'المكيفات والتدفئة',
+    },
+    slug: 'climatiseurs',
+    description: {
+      fr: 'Climatisation Inverter haute performance pour un confort thermique toute l\'année à Taourirt.',
+      ar: 'تكييف عالي الأداء لراحتك الحرارية طوال السنة في تاوريرت.',
+    },
+    image: 'https://images.unsplash.com/photo-1614633833026-062030018f67?auto=format&fit=crop&w=800&q=80',
+    isActive: true,
+  },
+  {
+    id: 'cuisinieres',
+    name: {
+      fr: 'Cuisinières & Fours',
+      ar: 'المواقد والأفران',
+    },
+    slug: 'cuisinieres',
+    description: {
+      fr: 'Cuisinières à gaz, plaques à induction et fours encastrables pour réussir toutes vos recettes.',
+      ar: 'مواقد غاز، أفرنت وأجهزة طهي مدمجة لإنجاز أشهى الأطباق.',
+    },
+    image: 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=800&q=80',
+    isActive: true,
+  },
+  {
+    id: 'televiseurs',
+    name: {
+      fr: 'Téléviseurs & Image',
+      ar: 'التلفزيونات والشاشات',
+    },
+    slug: 'televiseurs',
+    description: {
+      fr: 'Smart TV 4K, QLED et OLED pour une expérience cinéma immersive dans votre salon.',
+      ar: 'شاشات ذكية بدقة فائقة لتجربة سينمائية ممتازة في منزلك.',
+    },
+    image: 'https://images.unsplash.com/photo-1593784991095-a205069470b6?auto=format&fit=crop&w=800&q=80',
+    isActive: true,
+  },
 ];
 
 export const CATEGORIES: CategoryMeta[] = [

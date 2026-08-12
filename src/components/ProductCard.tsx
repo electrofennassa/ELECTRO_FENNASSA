@@ -3,6 +3,7 @@ import { Product } from '../types';
 import { useApp } from '../context/AppContext';
 import { createWhatsAppProductMessage } from '../data/companyInfo';
 import { ShoppingBag, MessageCircle, Shield, Eye, Heart } from 'lucide-react';
+import { handleImageError } from '../utils/imageUtils';
 
 interface ProductCardProps {
   product: Product;
@@ -39,6 +40,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           alt={product.name[lang]}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           loading="lazy"
+          onError={handleImageError}
         />
 
         {/* Promo / Badge tags */}

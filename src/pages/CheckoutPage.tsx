@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { COMPANY_INFO } from '../data/companyInfo';
 import { OrderCustomer } from '../types';
+import { handleImageError } from '../utils/imageUtils';
 import {
   ShoppingBag,
   Truck,
@@ -549,6 +550,7 @@ export const CheckoutPage: React.FC = () => {
                     src={item.product.image1 || item.product.mainImage || item.product.images?.[0] || 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80'}
                     alt={item.product.name[lang]}
                     className="w-12 h-12 object-cover rounded-lg border border-slate-200 shrink-0"
+                    onError={handleImageError}
                   />
                   <div className="flex-1 min-w-0 text-xs">
                     <p className="font-bold text-slate-900 truncate">

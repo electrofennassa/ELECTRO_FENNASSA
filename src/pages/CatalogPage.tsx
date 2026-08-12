@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { CATEGORIES } from '../data/categories';
 import { ProductCard } from '../components/ProductCard';
 import { Filter, Search, RotateCcw, SlidersHorizontal, X, Sparkles, Tag } from 'lucide-react';
 
@@ -9,6 +8,7 @@ export const CatalogPage: React.FC = () => {
     lang,
     t,
     products,
+    categories,
     brands,
     selectedCategoryFilter,
     setSelectedCategoryFilter,
@@ -31,13 +31,20 @@ export const CatalogPage: React.FC = () => {
   const [sortBy, setSortBy] = useState<'relevance' | 'newest' | 'price-asc' | 'price-desc'>('newest');
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
+  const activeCategories = categories.filter((c) => c.isActive);
+  const activeCatObj = activeCategories.find(
+    (c) => c.id === selectedCategoryFilter || c.slug === selectedCategoryFilter
+  );
+
   // Filter logic
   const filteredProducts = products.filter((p) => {
     if (!p.isActive) return false;
 
     // Category match
     if (selectedCategoryFilter !== 'all') {
-      if (p.categoryId !== selectedCategoryFilter && p.category !== selectedCategoryFilter) {
+      const matchDirect = p.categoryId === selectedCategoryFilter || p.category === selectedCategoryFilter;
+      const matchObj = activeCatObj && (p.categoryId === activeCatObj.id || p.category === activeCatObj.id || p.categoryId === activeCatObj.slug || p.category === activeCatObj.slug);
+      if (!matchDirect && !matchObj) {
         return false;
       }
     }
@@ -93,7 +100,7 @@ export const CatalogPage: React.FC = () => {
     return 0; // relevance / default
   });
 
-  const activeCategoryMeta = CATEGORIES.find((c) => c.id === selectedCategoryFilter);
+  const activeCategoryMeta = activeCatObj;
 
   const resetAllFilters = () => {
     setSelectedCategoryFilter('all');
@@ -126,15 +133,13 @@ export const CatalogPage: React.FC = () => {
             ELECTRO_FENNASSA TAOURIRT
           </span>
           <h1 className="text-2xl sm:text-4xl font-black mt-3">
-            {selectedCategoryFilter === 'gros-electromenager'
-              ? t.grosElectromenager
-              : selectedCategoryFilter === 'petit-electromenager'
-              ? t.petitElectromenager
+            {activeCatObj
+              ? (activeCatObj.name[lang] || activeCatObj.name.fr)
               : t.catalog}
           </h1>
           <p className="text-xs sm:text-sm text-slate-300 mt-2">
-            {activeCategoryMeta
-              ? activeCategoryMeta.description[lang]
+            {activeCatObj
+              ? (activeCatObj.description?.[lang] || activeCatObj.description?.fr || '')
               : lang === 'ar'
               ? 'تصفح جميع الأجهزة المنزلية من أشهر العلامات التجارية العالمية المتاحة بمتجرنا في تاوريرت.'
               : 'Découvrez l ensemble de nos électroménagers disponibles pour livraison immédiate à Taourirt.'}
@@ -182,7 +187,7 @@ export const CatalogPage: React.FC = () => {
                 <span>{t.allCategories}</span>
                 <span className="text-[10px] opacity-80">({products.length})</span>
               </button>
-              {CATEGORIES.map((cat) => (
+              {activeCategories.map((cat) => (
                 <button
                   key={cat.id}
                   onClick={() => {
@@ -190,12 +195,12 @@ export const CatalogPage: React.FC = () => {
                     setSelectedSubCategoryFilter('all');
                   }}
                   className={`w-full text-left px-3 py-2 rounded-xl text-xs font-semibold transition-colors flex items-center justify-between ${
-                    selectedCategoryFilter === cat.id
+                    selectedCategoryFilter === cat.id || selectedCategoryFilter === cat.slug
                       ? 'bg-blue-600 text-white font-bold'
                       : 'text-slate-700 hover:bg-slate-100'
                   }`}
                 >
-                  <span>{cat.title[lang]}</span>
+                  <span>{cat.name[lang] || cat.name.fr}</span>
                 </button>
               ))}
             </div>
@@ -428,9 +433,9 @@ export const CatalogPage: React.FC = () => {
                   className="w-full bg-slate-100 text-slate-900 text-xs px-3 py-2.5 rounded-xl border border-slate-200"
                 >
                   <option value="all">{t.allCategories}</option>
-                  {CATEGORIES.map((cat) => (
+                  {activeCategories.map((cat) => (
                     <option key={cat.id} value={cat.id}>
-                      {cat.title[lang]}
+                      {cat.name[lang] || cat.name.fr}
                     </option>
                   ))}
                 </select>

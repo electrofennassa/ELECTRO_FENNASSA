@@ -3,6 +3,7 @@ import { Pack } from '../types';
 import { useApp } from '../context/AppContext';
 import { createWhatsAppPackMessage } from '../data/companyInfo';
 import { Package, Check, MessageCircle, ArrowRight, Eye } from 'lucide-react';
+import { handleImageError } from '../utils/imageUtils';
 
 interface PackCardProps {
   pack: Pack;
@@ -39,6 +40,7 @@ export const PackCard: React.FC<PackCardProps> = ({ pack }) => {
             src={pack.image}
             alt={pack.name[lang] || pack.name.fr}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            onError={handleImageError}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent" />
 

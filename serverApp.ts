@@ -22,37 +22,44 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 });
 
 // Auth & Security Configuration
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'Electro_Fennassa@proton.me';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Nour@1969';
-const JWT_SECRET = process.env.JWT_SECRET || 'ef_secure_jwt_secret_key_2026';
+const IS_PROD = process.env.NODE_ENV === 'production' || Boolean(process.env.VERCEL);
 
-const ALLOWED_ADMIN_EMAILS = Array.from(
-  new Set([
-    (process.env.ADMIN_EMAIL || '').toLowerCase().trim(),
-    'electro_fennassa@proton.me',
-    'admin@electrofennassa.ma',
-  ].filter(Boolean))
-);
+const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || '').toLowerCase().trim();
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
+const JWT_SECRET = process.env.JWT_SECRET || (!IS_PROD ? 'ef_secure_jwt_secret_key_2026' : '');
 
-const ALLOWED_ADMIN_PASSWORDS = Array.from(
-  new Set([
-    process.env.ADMIN_PASSWORD,
-    'Nour@1969',
-    'admin123456',
-    'Electro_Fennassa',
-    'ElectroFennassa2026',
-    'proton2026',
-  ].filter(Boolean))
-);
-
-if (process.env.NODE_ENV === 'production') {
+if (IS_PROD) {
   if (!process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD || !process.env.JWT_SECRET) {
-    console.warn('⚠️ [SÉCURITÉ VERCEL/PRODUCTION] ADMIN_EMAIL, ADMIN_PASSWORD ou JWT_SECRET ne sont pas définis explicitement.');
+    console.error('⚠️ [SÉCURITÉ VERCEL/PRODUCTION] ADMIN_EMAIL, ADMIN_PASSWORD ou JWT_SECRET n’est pas défini dans les variables d’environnement Vercel.');
   }
 }
 
+// In Production, strictly require configured environment variables; in dev allow local fallbacks
+const ALLOWED_ADMIN_EMAILS = IS_PROD
+  ? Array.from(new Set([ADMIN_EMAIL].filter(Boolean)))
+  : Array.from(
+      new Set([
+        ADMIN_EMAIL,
+        'electro_fennassa@proton.me',
+        'admin@electrofennassa.ma',
+      ].filter(Boolean))
+    );
+
+const ALLOWED_ADMIN_PASSWORDS = IS_PROD
+  ? Array.from(new Set([ADMIN_PASSWORD].filter(Boolean)))
+  : Array.from(
+      new Set([
+        ADMIN_PASSWORD,
+        'Nour@1969',
+      ].filter(Boolean))
+    );
+
 // Middleware to check admin JWT token statelessly
 function requireAdminAuth(req: Request, res: Response, next: NextFunction) {
+  if (!JWT_SECRET) {
+    return res.status(500).json({ error: 'Configuration serveur incomplète (JWT_SECRET manquant).' });
+  }
+
   let token: string | undefined;
 
   const authHeader = req.headers.authorization;

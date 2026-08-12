@@ -15,10 +15,19 @@ import {
 } from 'lucide-react';
 
 export const Footer: React.FC = () => {
-  const { lang, t, setCurrentPage } = useApp();
+  const { lang, t, categories, setCurrentPage, setSelectedCategoryFilter, setSelectedSubCategoryFilter } = useApp();
+
+  const activeCategories = categories.filter((c) => c.isActive);
 
   const handleNav = (page: PageRoute) => {
     setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleCategoryClick = (catId: string) => {
+    setSelectedCategoryFilter(catId);
+    setSelectedSubCategoryFilter('all');
+    setCurrentPage('catalog');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -134,20 +143,26 @@ export const Footer: React.FC = () => {
               {lang === 'ar' ? 'أقسام المتجر' : 'Catégories'}
             </h3>
             <ul className="space-y-2.5 text-xs">
+              {activeCategories.slice(0, 6).map((cat) => (
+                <li key={cat.id}>
+                  <button
+                    onClick={() => handleCategoryClick(cat.id)}
+                    className="hover:text-blue-400 transition-colors"
+                  >
+                    {cat.name[lang] || cat.name.fr}
+                  </button>
+                </li>
+              ))}
               <li>
                 <button
-                  onClick={() => handleNav('gros-electromenager')}
-                  className="hover:text-blue-400 transition-colors"
+                  onClick={() => {
+                    setSelectedCategoryFilter('all');
+                    setCurrentPage('catalog');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  className="hover:text-blue-400 transition-colors font-bold text-blue-400"
                 >
-                  {t.grosElectromenager}
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => handleNav('petit-electromenager')}
-                  className="hover:text-blue-400 transition-colors"
-                >
-                  {t.petitElectromenager}
+                  {t.allCategories} &rarr;
                 </button>
               </li>
               <li>

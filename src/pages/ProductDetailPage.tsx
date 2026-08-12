@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { ProductCard } from '../components/ProductCard';
 import { createWhatsAppProductMessage, COMPANY_INFO } from '../data/companyInfo';
+import { handleImageError } from '../utils/imageUtils';
 import {
   ShoppingBag,
   MessageCircle,
@@ -151,6 +152,7 @@ export const ProductDetailPage: React.FC = () => {
               alt={p.name[lang] || p.name.fr}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 cursor-pointer"
               onClick={() => setIsZoomOpen(true)}
+              onError={handleImageError}
             />
 
             {/* Badges */}
@@ -199,6 +201,7 @@ export const ProductDetailPage: React.FC = () => {
                     src={imgUrl}
                     alt={`Thumbnail ${idx + 1}`}
                     className="w-full h-full object-cover"
+                    onError={handleImageError}
                   />
                 </button>
               ))}
@@ -404,6 +407,7 @@ export const ProductDetailPage: React.FC = () => {
               src={activeImage}
               alt={p.name[lang] || p.name.fr}
               className="w-full h-full object-contain max-h-[80vh]"
+              onError={handleImageError}
             />
           </div>
         </div>

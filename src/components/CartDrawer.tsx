@@ -2,6 +2,7 @@ import React from 'react';
 import { useApp } from '../context/AppContext';
 import { COMPANY_INFO } from '../data/companyInfo';
 import { ShoppingBag, X, Plus, Minus, Trash2, ArrowRight, Truck, CheckCircle2 } from 'lucide-react';
+import { handleImageError } from '../utils/imageUtils';
 
 export const CartDrawer: React.FC = () => {
   const {
@@ -79,6 +80,7 @@ export const CartDrawer: React.FC = () => {
                   src={item.product.image1 || item.product.mainImage || item.product.images?.[0] || 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80'}
                   alt={item.product.name[lang]}
                   className="w-16 h-16 object-cover rounded-xl border border-slate-200 shrink-0 bg-white"
+                  onError={handleImageError}
                 />
 
                 <div className="flex-1 min-w-0">

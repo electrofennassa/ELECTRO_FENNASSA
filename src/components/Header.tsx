@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { COMPANY_INFO } from '../data/companyInfo';
-import { CATEGORIES } from '../data/categories';
 import { PageRoute } from '../types';
 import {
   Phone,
@@ -24,6 +23,7 @@ import {
   Info,
   History,
   ShieldCheck,
+  Grid,
 } from 'lucide-react';
 
 export const Header: React.FC = () => {
@@ -37,6 +37,7 @@ export const Header: React.FC = () => {
     setIsCartOpen,
     searchQuery,
     setSearchQuery,
+    categories,
     selectedCategoryFilter,
     setSelectedCategoryFilter,
     setSelectedSubCategoryFilter,
@@ -49,9 +50,11 @@ export const Header: React.FC = () => {
   } = useApp();
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [activeDropdown, setActiveDropdown] = useState<'gros' | 'petit' | null>(null);
+  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
+
+  const activeCategories = categories.filter((c) => c.isActive);
 
   // Close search dropdown when clicking outside
   useEffect(() => {
@@ -76,23 +79,17 @@ export const Header: React.FC = () => {
         .slice(0, 5)
     : [];
 
-  const handleCategoryNav = (catId: 'gros-electromenager' | 'petit-electromenager', subId?: string) => {
+  const handleCategoryNav = (catId: string) => {
     setSelectedCategoryFilter(catId);
-    if (subId) {
-      setSelectedSubCategoryFilter(subId as any);
-    } else {
-      setSelectedSubCategoryFilter('all');
-    }
-    setCurrentPage(catId as PageRoute);
-    setActiveDropdown(null);
+    setSelectedSubCategoryFilter('all');
+    setCurrentPage('catalog');
+    setIsCategoryDropdownOpen(false);
     setIsMobileMenuOpen(false);
   };
 
   const navLinks: { id: PageRoute; label: string; badge?: string }[] = [
     { id: 'home', label: t.home },
     { id: 'catalog', label: t.catalog },
-    { id: 'gros-electromenager', label: t.grosElectromenager },
-    { id: 'petit-electromenager', label: t.petitElectromenager },
     { id: 'promotions', label: t.promotions, badge: 'PROMO' },
     { id: 'packs', label: t.packs, badge: 'PACK' },
     { id: 'marques', label: t.marques },
@@ -359,94 +356,80 @@ export const Header: React.FC = () => {
             {navLinks.map((link) => {
               const isActive = currentPage === link.id;
 
-              if (link.id === 'gros-electromenager') {
-                const grosCat = CATEGORIES.find((c) => c.id === 'gros-electromenager');
+              // Insert Categories Dropdown right after Catalogue
+              if (link.id === 'catalog') {
                 return (
-                  <div
-                    key={link.id}
-                    className="relative"
-                    onMouseEnter={() => setActiveDropdown('gros')}
-                    onMouseLeave={() => setActiveDropdown(null)}
-                  >
+                  <React.Fragment key="catalog-group">
                     <button
-                      onClick={() => handleCategoryNav('gros-electromenager')}
-                      className={`px-3.5 py-3 flex items-center gap-1 border-b-2 transition-colors ${
-                        isActive
+                      key={link.id}
+                      onClick={() => {
+                        setSelectedCategoryFilter('all');
+                        setSelectedSubCategoryFilter('all');
+                        setCurrentPage('catalog');
+                      }}
+                      className={`px-3.5 py-3 border-b-2 transition-colors flex items-center gap-1.5 ${
+                        isActive && selectedCategoryFilter === 'all'
                           ? 'border-blue-600 text-blue-600 font-bold bg-white'
                           : 'border-transparent hover:text-blue-600 hover:bg-slate-100'
                       }`}
                     >
                       <span>{link.label}</span>
-                      <ChevronDown className="w-4 h-4 text-slate-400" />
                     </button>
 
-                    {/* Dropdown Menu */}
-                    {activeDropdown === 'gros' && (
-                      <div className="absolute left-0 top-full w-64 bg-white rounded-b-2xl shadow-xl border border-slate-200 py-2 z-50">
-                        {grosCat?.subcategories.map((sub) => (
-                          <button
-                            key={sub.id}
-                            onClick={() => handleCategoryNav('gros-electromenager', sub.id)}
-                            className="w-full text-left px-4 py-2 text-xs font-semibold text-slate-700 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-                          >
-                            {sub.title[lang]}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              }
-
-              if (link.id === 'petit-electromenager') {
-                const petitCat = CATEGORIES.find((c) => c.id === 'petit-electromenager');
-                return (
-                  <div
-                    key={link.id}
-                    className="relative"
-                    onMouseEnter={() => setActiveDropdown('petit')}
-                    onMouseLeave={() => setActiveDropdown(null)}
-                  >
-                    <button
-                      onClick={() => handleCategoryNav('petit-electromenager')}
-                      className={`px-3.5 py-3 flex items-center gap-1 border-b-2 transition-colors ${
-                        isActive
-                          ? 'border-blue-600 text-blue-600 font-bold bg-white'
-                          : 'border-transparent hover:text-blue-600 hover:bg-slate-100'
-                      }`}
+                    {/* Dynamic Categories Dropdown Menu */}
+                    <div
+                      className="relative"
+                      onMouseEnter={() => setIsCategoryDropdownOpen(true)}
+                      onMouseLeave={() => setIsCategoryDropdownOpen(false)}
                     >
-                      <span>{link.label}</span>
-                      <ChevronDown className="w-4 h-4 text-slate-400" />
-                    </button>
+                      <button
+                        onClick={() => {
+                          setCurrentPage('catalog');
+                          setIsCategoryDropdownOpen(!isCategoryDropdownOpen);
+                        }}
+                        className={`px-3.5 py-3 flex items-center gap-1.5 border-b-2 transition-colors ${
+                          currentPage === 'catalog' && selectedCategoryFilter !== 'all'
+                            ? 'border-blue-600 text-blue-600 font-bold bg-white'
+                            : 'border-transparent hover:text-blue-600 hover:bg-slate-100'
+                        }`}
+                      >
+                        <Grid className="w-4 h-4 text-blue-600" />
+                        <span>{lang === 'ar' ? 'الأقسام' : 'Nos Catégories'}</span>
+                        <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                      </button>
 
-                    {/* Dropdown Menu */}
-                    {activeDropdown === 'petit' && (
-                      <div className="absolute left-0 top-full w-64 bg-white rounded-b-2xl shadow-xl border border-slate-200 py-2 z-50">
-                        {petitCat?.subcategories.map((sub) => (
-                          <button
-                            key={sub.id}
-                            onClick={() => handleCategoryNav('petit-electromenager', sub.id)}
-                            className="w-full text-left px-4 py-2 text-xs font-semibold text-slate-700 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-                          >
-                            {sub.title[lang]}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                      {isCategoryDropdownOpen && (
+                        <div className="absolute left-0 top-full w-64 bg-white rounded-b-2xl shadow-xl border border-slate-200 py-2 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
+                          {activeCategories.length > 0 ? (
+                            activeCategories.map((cat) => (
+                              <button
+                                key={cat.id}
+                                onClick={() => handleCategoryNav(cat.id)}
+                                className={`w-full text-left px-4 py-2.5 text-xs font-semibold flex items-center justify-between transition-colors ${
+                                  selectedCategoryFilter === cat.id || selectedCategoryFilter === cat.slug
+                                    ? 'bg-blue-50 text-blue-700 font-bold'
+                                    : 'text-slate-700 hover:text-blue-600 hover:bg-slate-50'
+                                }`}
+                              >
+                                <span>{cat.name[lang] || cat.name.fr}</span>
+                              </button>
+                            ))
+                          ) : (
+                            <div className="px-4 py-2 text-xs text-slate-400">
+                              {lang === 'ar' ? 'لا توجد أقسام متاحة' : 'Aucune catégorie disponible'}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </React.Fragment>
                 );
               }
 
               return (
                 <button
                   key={link.id}
-                  onClick={() => {
-                    if (link.id === 'catalog') {
-                      setSelectedCategoryFilter('all');
-                      setSelectedSubCategoryFilter('all');
-                    }
-                    setCurrentPage(link.id);
-                  }}
+                  onClick={() => setCurrentPage(link.id)}
                   className={`px-3.5 py-3 border-b-2 transition-colors flex items-center gap-1.5 ${
                     isActive
                       ? 'border-blue-600 text-blue-600 font-bold bg-white'
@@ -521,31 +504,74 @@ export const Header: React.FC = () => {
 
               {/* Mobile Links */}
               <div className="flex flex-col gap-1 py-2">
-                {navLinks.map((link) => (
-                  <button
-                    key={link.id}
-                    onClick={() => {
-                      if (link.id === 'catalog') {
-                        setSelectedCategoryFilter('all');
-                        setSelectedSubCategoryFilter('all');
-                      }
-                      setCurrentPage(link.id);
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className={`w-full text-left px-4 py-3 rounded-xl text-sm font-semibold flex items-center justify-between ${
-                      currentPage === link.id
-                        ? 'bg-blue-50 text-blue-600 font-bold'
-                        : 'text-slate-800 hover:bg-slate-50'
-                    }`}
-                  >
-                    <span>{link.label}</span>
-                    {link.badge && (
-                      <span className="px-2 py-0.5 text-[10px] font-black rounded-full bg-rose-500 text-white">
-                        {link.badge}
-                      </span>
-                    )}
-                  </button>
-                ))}
+                {navLinks.map((link) => {
+                  if (link.id === 'catalog') {
+                    return (
+                      <React.Fragment key="mobile-catalog-group">
+                        <button
+                          key={link.id}
+                          onClick={() => {
+                            setSelectedCategoryFilter('all');
+                            setSelectedSubCategoryFilter('all');
+                            setCurrentPage('catalog');
+                            setIsMobileMenuOpen(false);
+                          }}
+                          className={`w-full text-left px-4 py-3 rounded-xl text-sm font-semibold flex items-center justify-between ${
+                            currentPage === 'catalog' && selectedCategoryFilter === 'all'
+                              ? 'bg-blue-50 text-blue-600 font-bold'
+                              : 'text-slate-800 hover:bg-slate-50'
+                          }`}
+                        >
+                          <span>{link.label}</span>
+                        </button>
+
+                        {/* Category List in Mobile Drawer */}
+                        {activeCategories.length > 0 && (
+                          <div className="pl-4 pr-2 py-1 my-1 bg-slate-50 rounded-2xl border border-slate-100 space-y-1">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block px-2 pt-1">
+                              {lang === 'ar' ? 'الأقسام' : 'Rayons & Catégories'}
+                            </span>
+                            {activeCategories.map((cat) => (
+                              <button
+                                key={cat.id}
+                                onClick={() => handleCategoryNav(cat.id)}
+                                className={`w-full text-left px-3 py-2 rounded-xl text-xs font-semibold flex items-center justify-between transition-colors ${
+                                  selectedCategoryFilter === cat.id || selectedCategoryFilter === cat.slug
+                                    ? 'bg-blue-600 text-white font-bold'
+                                    : 'text-slate-700 hover:bg-slate-200/60'
+                                }`}
+                              >
+                                <span>{cat.name[lang] || cat.name.fr}</span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </React.Fragment>
+                    );
+                  }
+
+                  return (
+                    <button
+                      key={link.id}
+                      onClick={() => {
+                        setCurrentPage(link.id);
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className={`w-full text-left px-4 py-3 rounded-xl text-sm font-semibold flex items-center justify-between ${
+                        currentPage === link.id
+                          ? 'bg-blue-50 text-blue-600 font-bold'
+                          : 'text-slate-800 hover:bg-slate-50'
+                      }`}
+                    >
+                      <span>{link.label}</span>
+                      {link.badge && (
+                        <span className="px-2 py-0.5 text-[10px] font-black rounded-full bg-rose-500 text-white">
+                          {link.badge}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
 
                 <button
                   onClick={() => {

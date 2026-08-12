@@ -1,10 +1,10 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
 import { COMPANY_INFO } from '../data/companyInfo';
-import { CATEGORIES } from '../data/categories';
 import { INITIAL_BRANDS } from '../data/brands';
 import { ProductCard } from '../components/ProductCard';
 import { PackCard } from '../components/PackCard';
+import { handleImageError } from '../utils/imageUtils';
 import {
   ArrowRight,
   ShieldCheck,
@@ -19,8 +19,9 @@ import {
 } from 'lucide-react';
 
 export const HomePage: React.FC = () => {
-  const { lang, t, products, packs, brands, setCurrentPage, setSelectedCategoryFilter } = useApp();
+  const { lang, t, products, categories, packs, brands, setCurrentPage, setSelectedCategoryFilter } = useApp();
 
+  const activeCategories = categories.filter((c) => c.isActive);
   const promoProducts = products.filter((p) => p.isPromo || p.isPromotion).slice(0, 4);
   const featuredPacks = packs.slice(0, 3);
   const activeBrands = brands.length > 0 ? brands : INITIAL_BRANDS;
@@ -157,32 +158,31 @@ export const HomePage: React.FC = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {CATEGORIES.map((cat) => (
+        <div className={`grid grid-cols-1 ${activeCategories.length === 1 ? 'max-w-xl mx-auto' : activeCategories.length === 2 ? 'md:grid-cols-2' : 'sm:grid-cols-2 lg:grid-cols-3'} gap-6`}>
+          {activeCategories.map((cat) => (
             <div
               key={cat.id}
               onClick={() => {
                 setSelectedCategoryFilter(cat.id);
-                setCurrentPage(cat.id as any);
+                setCurrentPage('catalog');
               }}
               className="group relative h-64 rounded-3xl overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-all duration-300 border border-slate-200"
             >
               <img
-                src={cat.image}
-                alt={cat.title[lang]}
+                src={cat.image || 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80'}
+                alt={cat.name[lang] || cat.name.fr}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                onError={handleImageError}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/60 to-transparent" />
 
               <div className="absolute bottom-6 left-6 right-6 text-white space-y-2">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-blue-400 bg-blue-950/80 border border-blue-800 px-3 py-1 rounded-full inline-block">
-                  {cat.subcategories.length}{' '}
-                  {lang === 'ar' ? 'أنواع فرعية' : 'sous-catégories'}
-                </span>
-                <h3 className="text-2xl font-black">{cat.title[lang]}</h3>
-                <p className="text-xs text-slate-300 line-clamp-2">
-                  {cat.description[lang]}
-                </p>
+                <h3 className="text-2xl font-black">{cat.name[lang] || cat.name.fr}</h3>
+                {cat.description?.[lang] || cat.description?.fr ? (
+                  <p className="text-xs text-slate-300 line-clamp-2">
+                    {cat.description[lang] || cat.description.fr}
+                  </p>
+                ) : null}
                 <div className="pt-2 flex items-center gap-1 text-xs font-bold text-amber-400 group-hover:translate-x-1 transition-transform">
                   <span>{t.exploreCatalog}</span>
                   <ArrowRight className="w-4 h-4" />
